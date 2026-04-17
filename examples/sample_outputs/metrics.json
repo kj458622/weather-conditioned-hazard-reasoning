@@ -1,0 +1,7 @@
+{
+  "num_samples": 3,
+  "json_parse_success_rate": 1.0,
+  "hazard_object_accuracy": 1.0,
+  "risk_level_accuracy": 1.0,
+  "rouge_l_f1": 0.32747695852534564
+}

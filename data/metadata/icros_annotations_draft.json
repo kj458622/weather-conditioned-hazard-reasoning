@@ -1,0 +1,162 @@
+[
+  {
+    "id": "img_0101_ped_snow_crosswalk",
+    "image_path": "data/images/img_0101_ped_snow_crosswalk.jpg",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "unclear"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "pedestrian is stepping into the ego lane under low visibility",
+      "explanation_ko": "보행자가 횡단보도 또는 차로 쪽으로 진입하고 있으며 눈으로 인해 가시성이 낮아 조기 대응이 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0102_front_vehicle_fog_brake",
+    "image_path": "data/images/img_0102_front_vehicle_fog_brake.jpg",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "front vehicle",
+      "risk_level": "high",
+      "reason": "front vehicle may decelerate abruptly while fog limits the stopping distance margin",
+      "explanation_ko": "앞 차량이 감속 중이거나 급정지할 수 있으며 안개로 인해 시야가 제한되어 안전거리 확보가 더 필요함"
+    }
+  },
+  {
+    "id": "img_0103_lane_rain_night",
+    "image_path": "data/images/img_0103_lane_rain_night.jpg",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "medium",
+      "illumination": "night",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "lane boundary",
+      "risk_level": "high",
+      "reason": "wet road reflections and low illumination make lane boundaries harder to follow",
+      "explanation_ko": "젖은 노면 반사와 야간 조도로 차선 경계 식별이 어려워 차로 유지 위험이 증가함"
+    }
+  },
+  {
+    "id": "img_0104_intersection_fog_turning_vehicle",
+    "image_path": "data/images/img_0104_intersection_fog_turning_vehicle.jpg",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "turning vehicle",
+      "risk_level": "high",
+      "reason": "a vehicle turning at the intersection may enter the ego path while fog reduces reaction time",
+      "explanation_ko": "교차로에서 회전 차량이 자차 경로를 침범할 수 있으며 안개로 반응 시간이 줄어 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0105_ped_rain_bus_stop",
+    "image_path": "data/images/img_0105_ped_rain_bus_stop.jpg",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "pedestrians near a bus stop may move unpredictably on a slippery road",
+      "explanation_ko": "정류장 주변 보행자가 갑자기 차로 쪽으로 움직일 수 있고 비로 인해 노면이 미끄러워 제동 여유가 줄어듦"
+    }
+  },
+  {
+    "id": "img_0106_front_vehicle_snow_queue",
+    "image_path": "data/images/img_0106_front_vehicle_snow_queue.jpg",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "unclear"
+    },
+    "target": {
+      "hazard_object": "queued vehicles",
+      "risk_level": "high",
+      "reason": "a slow or queued traffic segment ahead is harder to detect early in snowy conditions",
+      "explanation_ko": "전방 정체 차량열이 눈과 낮은 가시성 때문에 늦게 인지될 수 있어 추돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0107_curve_fog_guardrail",
+    "image_path": "data/images/img_0107_curve_fog_guardrail.jpg",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "road curvature",
+      "risk_level": "medium",
+      "reason": "road curvature is harder to anticipate when far-field visibility is limited",
+      "explanation_ko": "곡선 구간의 진행 방향을 멀리서 파악하기 어려워 차로 이탈 또는 과속 진입 위험이 증가함"
+    }
+  },
+  {
+    "id": "img_0108_night_glare_oncoming",
+    "image_path": "data/images/img_0108_night_glare_oncoming.jpg",
+    "weather": {
+      "weather_type": "clear",
+      "visibility": "medium",
+      "illumination": "night",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "oncoming vehicle glare",
+      "risk_level": "medium",
+      "reason": "headlight glare at night can obscure nearby obstacles and lane cues",
+      "explanation_ko": "야간 맞은편 차량의 전조등 눈부심으로 주변 장애물과 차선 단서가 가려져 위험 판단이 어려워질 수 있음"
+    }
+  },
+  {
+    "id": "img_0109_crosswalk_night_ped",
+    "image_path": "data/images/img_0109_crosswalk_night_ped.jpg",
+    "weather": {
+      "weather_type": "clear",
+      "visibility": "medium",
+      "illumination": "night",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "a pedestrian near the crosswalk is less conspicuous at night",
+      "explanation_ko": "횡단보도 주변 보행자가 야간 조도에서 눈에 덜 띄어 발견이 늦어질 수 있어 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0110_rain_merge_vehicle",
+    "image_path": "data/images/img_0110_rain_merge_vehicle.jpg",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "merging vehicle",
+      "risk_level": "high",
+      "reason": "a merging vehicle may reduce lateral safety margin on a slippery road",
+      "explanation_ko": "합류 차량이 자차 차선에 가까워질 수 있고 비로 인해 노면이 미끄러워 회피 및 제동 여유가 줄어듦"
+    }
+  }
+]

@@ -1,0 +1,1 @@
+weather_type=fog, visibility=low, illumination=day, road_condition=clear

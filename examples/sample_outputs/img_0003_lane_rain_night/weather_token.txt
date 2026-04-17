@@ -1,0 +1,1 @@
+weather_type=rain, visibility=medium, illumination=night, road_condition=slippery

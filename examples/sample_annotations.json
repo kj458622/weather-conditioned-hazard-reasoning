@@ -1,0 +1,51 @@
+[
+  {
+    "id": "img_0001_ped_snow",
+    "image_path": "examples/sample_images/img_0001_ped_snow.png",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "unclear"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "pedestrian entering ego lane under low visibility",
+      "explanation_ko": "보행자가 차로 근처에 있으며 눈으로 인해 가시성이 낮아 조기 대응이 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0002_car_fog",
+    "image_path": "examples/sample_images/img_0002_car_fog.png",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "front vehicle",
+      "risk_level": "high",
+      "reason": "front vehicle may slow down abruptly in fog",
+      "explanation_ko": "앞 차량이 감속하거나 정지할 가능성이 있으며 안개로 시야가 제한되어 안전거리가 더 필요함"
+    }
+  },
+  {
+    "id": "img_0003_lane_rain_night",
+    "image_path": "examples/sample_images/img_0003_lane_rain_night.png",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "medium",
+      "illumination": "night",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "lane boundary",
+      "risk_level": "high",
+      "reason": "lane boundary is harder to follow on wet roads at night",
+      "explanation_ko": "젖은 노면과 야간 조도로 차선 경계 식별이 어려워 차로 유지 위험이 증가함"
+    }
+  }
+]
+

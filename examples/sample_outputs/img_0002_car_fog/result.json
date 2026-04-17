@@ -1,0 +1,24 @@
+{
+  "id": "img_0002_car_fog",
+  "image_path": "examples/sample_images/img_0002_car_fog.png",
+  "weather": {
+    "weather_type": "fog",
+    "visibility": "low",
+    "illumination": "day",
+    "road_condition": "clear"
+  },
+  "prediction": {
+    "hazard_object": "front vehicle",
+    "risk_level": "high",
+    "reason": "front vehicle may slow down abruptly with fog and clear road surface",
+    "explanation": "앞 차량의 속도 변화 가능성이 있으며, 안개 환경과 양호한 노면으로 인해 제동 거리 확보가 더 필요합니다.",
+    "_parse_ok": true
+  },
+  "free_text": "앞 차량의 속도 변화 가능성이 있으며, 안개 환경과 양호한 노면으로 인해 제동 거리 확보가 더 필요합니다.",
+  "target": {
+    "hazard_object": "front vehicle",
+    "risk_level": "high",
+    "reason": "front vehicle may slow down abruptly in fog",
+    "explanation_ko": "앞 차량이 감속하거나 정지할 가능성이 있으며 안개로 시야가 제한되어 안전거리가 더 필요함"
+  }
+}

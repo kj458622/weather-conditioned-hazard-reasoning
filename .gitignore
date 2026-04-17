@@ -1,0 +1,17 @@
+.codex/
+__pycache__/
+*.pyc
+
+outputs/
+outputs_prompt/
+tmp/
+data/raw/
+
+.ipynb_checkpoints/
+
+관련연구/
+AutoDriDM.pdf
+InSIGHT.pdf
+논문작성요령_ICROS2026 (1).zip
+논문작성요령_ICROS2026.hwp
+논문작성요령_ICROS2026.pdf

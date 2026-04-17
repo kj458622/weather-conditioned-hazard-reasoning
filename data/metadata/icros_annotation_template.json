@@ -1,0 +1,50 @@
+[
+  {
+    "id": "img_0001_ped_snow",
+    "image_path": "examples/sample_images/img_0001_ped_snow.png",
+    "weather": {
+      "weather_type": "clear",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "unknown",
+      "risk_level": "medium",
+      "reason": "",
+      "explanation_ko": ""
+    }
+  },
+  {
+    "id": "img_0002_car_fog",
+    "image_path": "examples/sample_images/img_0002_car_fog.png",
+    "weather": {
+      "weather_type": "clear",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "unknown",
+      "risk_level": "medium",
+      "reason": "",
+      "explanation_ko": ""
+    }
+  },
+  {
+    "id": "img_0003_lane_rain_night",
+    "image_path": "examples/sample_images/img_0003_lane_rain_night.png",
+    "weather": {
+      "weather_type": "clear",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "unknown",
+      "risk_level": "medium",
+      "reason": "",
+      "explanation_ko": ""
+    }
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "id": "img_0003_lane_rain_night",
+  "image_path": "examples/sample_images/img_0003_lane_rain_night.png",
+  "weather": {
+    "weather_type": "rain",
+    "visibility": "medium",
+    "illumination": "night",
+    "road_condition": "slippery"
+  },
+  "prediction": {
+    "hazard_object": "lane boundary",
+    "risk_level": "high",
+    "reason": "lane boundary is less reliable under rain weather",
+    "explanation": "차선 경계가 비 환경에서 불명확해질 수 있어 차로 유지 판단이 어려워질 수 있습니다. 야간 조도로 인해 추가적인 시야 제약이 있습니다.",
+    "_parse_ok": true
+  },
+  "free_text": "차선 경계가 비 환경에서 불명확해질 수 있어 차로 유지 판단이 어려워질 수 있습니다. 야간 조도로 인해 추가적인 시야 제약이 있습니다.",
+  "target": {
+    "hazard_object": "lane boundary",
+    "risk_level": "high",
+    "reason": "lane boundary is harder to follow on wet roads at night",
+    "explanation_ko": "젖은 노면과 야간 조도로 차선 경계 식별이 어려워 차로 유지 위험이 증가함"
+  }
+}

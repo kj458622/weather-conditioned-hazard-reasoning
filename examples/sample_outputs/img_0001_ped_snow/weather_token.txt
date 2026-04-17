@@ -1,0 +1,1 @@
+weather_type=snow, visibility=low, illumination=day, road_condition=unclear

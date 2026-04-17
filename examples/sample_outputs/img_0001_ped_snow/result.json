@@ -1,0 +1,24 @@
+{
+  "id": "img_0001_ped_snow",
+  "image_path": "examples/sample_images/img_0001_ped_snow.png",
+  "weather": {
+    "weather_type": "snow",
+    "visibility": "low",
+    "illumination": "day",
+    "road_condition": "unclear"
+  },
+  "prediction": {
+    "hazard_object": "pedestrian",
+    "risk_level": "high",
+    "reason": "pedestrian entering or near ego lane under low visibility",
+    "explanation": "보행자가 주행 경로 근처에 있으며, 눈 상태로 인해 가시성이 낮은 수준이라 조기 대응이 어려워 충돌 위험이 높습니다.",
+    "_parse_ok": true
+  },
+  "free_text": "보행자가 주행 경로 근처에 있으며, 눈 상태로 인해 가시성이 낮은 수준이라 조기 대응이 어려워 충돌 위험이 높습니다.",
+  "target": {
+    "hazard_object": "pedestrian",
+    "risk_level": "high",
+    "reason": "pedestrian entering ego lane under low visibility",
+    "explanation_ko": "보행자가 차로 근처에 있으며 눈으로 인해 가시성이 낮아 조기 대응이 어려워 충돌 위험이 높음"
+  }
+}
