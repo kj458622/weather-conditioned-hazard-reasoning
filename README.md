@@ -556,6 +556,7 @@ python src/run_inference.py \
 - 데이터셋 수집 체크리스트: `data/metadata/dataset_collection_checklist.md`
 - annotation 작업 규칙: `data/metadata/annotation_workflow.md`
 - annotation 체크리스트: `data/metadata/annotation_checklist.md`
+- 로컬 수정/Colab 반영 방법: `docs/update_method.md`
 
 권장 순서:
 
