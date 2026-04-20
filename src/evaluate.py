@@ -7,6 +7,33 @@ from typing import Any, Dict, List
 from utils import mean, rouge_l_f1
 
 
+HAZARD_NORMALIZATION = {
+    "front vehicle": "front_vehicle",
+    "front_vehicle": "front_vehicle",
+    "vehicle": "vehicle",
+    "pedestrian": "pedestrian",
+    "pedestrians": "pedestrian",
+    "cyclist": "cyclist",
+    "bicyclist": "cyclist",
+    "bicycle": "cyclist",
+    "two wheeler": "two_wheeler",
+    "two-wheeler": "two_wheeler",
+    "two_wheeler": "two_wheeler",
+    "rider": "two_wheeler",
+    "scooter rider": "two_wheeler",
+    "unknown object": "unknown_object",
+    "unknown_object": "unknown_object",
+    "lane boundary": "lane_boundary",
+    "lane_boundary": "lane_boundary",
+}
+
+
+def normalize_hazard_label(value: str) -> str:
+    normalized = str(value).strip().lower().replace("-", " ").replace("_", " ")
+    normalized = " ".join(normalized.split())
+    return HAZARD_NORMALIZATION.get(normalized, normalized.replace(" ", "_"))
+
+
 def evaluate_predictions(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Compute lightweight metrics for prototype validation."""
     total = len(records)
@@ -30,8 +57,8 @@ def evaluate_predictions(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         if prediction.get("_parse_ok", False):
             json_success += 1
 
-        pred_hazard = str(prediction.get("hazard_object", "")).strip().lower()
-        tgt_hazard = str(target.get("hazard_object", "")).strip().lower()
+        pred_hazard = normalize_hazard_label(prediction.get("hazard_object", ""))
+        tgt_hazard = normalize_hazard_label(target.get("hazard_object", ""))
         if pred_hazard and tgt_hazard and pred_hazard == tgt_hazard:
             hazard_correct += 1
 
@@ -52,4 +79,3 @@ def evaluate_predictions(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "risk_level_accuracy": risk_correct / total,
         "rouge_l_f1": mean(rouge_scores),
     }
-

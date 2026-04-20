@@ -13,6 +13,12 @@ def build_reasoning_system_prompt() -> str:
         "Use both the image and the provided weather conditions. "
         "Do not only describe objects. Explain why the scene is risky "
         "under the given adverse-weather condition. "
+        "Focus on one primary hazard object only. "
+        "Prefer scene-specific cues such as crosswalk, occlusion, dense traffic, "
+        "lane ambiguity, curve, merge, rider, or limited sight distance when visible. "
+        "Avoid generic phrases like 'be careful' unless you also mention a concrete reason. "
+        "The Korean explanation must explicitly mention how weather, visibility, "
+        "illumination, or road condition increases risk. "
         "Return structured JSON only with keys: "
         "hazard_object, risk_level, reason, explanation."
     )
@@ -28,7 +34,11 @@ def build_reasoning_user_prompt(weather_token: Dict[str, str]) -> str:
         "road_condition": weather_token.get("road_condition", "clear"),
         "instruction": (
             "Analyze the scene and explain why it is risky for autonomous driving "
-            "under these conditions. Keep the reason concise and provide a Korean explanation."
+            "under these conditions. Choose exactly one primary hazard object. "
+            "Keep the reason concise, but make it scene-specific instead of generic. "
+            "If relevant, mention cues such as crosswalk, parked vehicles, occlusion, "
+            "dense traffic, lane boundary ambiguity, or a rider/two-wheeler. "
+            "Provide a Korean explanation that explicitly includes the weather impact."
         ),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
@@ -53,4 +63,3 @@ def build_weather_user_prompt() -> str:
         ),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
-

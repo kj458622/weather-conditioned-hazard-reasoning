@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
@@ -42,9 +42,17 @@ VISIBILITY_LABELS_KO = {
 
 ROAD_CONDITION_LABELS_KO = {
     "clear": "양호한",
+    "wet": "젖은",
     "unclear": "불명확한",
     "slippery": "미끄러운",
 }
+
+FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+]
 
 
 def ensure_dir(path: os.PathLike[str] | str) -> Path:
@@ -243,29 +251,80 @@ def save_overlay_visualization(
         draw = ImageDraw.Draw(image)
         width, height = image.size
         margin = 16
-        panel_height = max(80, height // 4)
+        font = _load_overlay_font(max(20, width // 45))
+        line_spacing = max(8, font.size // 3)
+        max_text_width = width - (margin * 2)
+        wrapped_lines = _wrap_overlay_text(draw, overlay_text, font, max_text_width)
+        line_height = _measure_text_height(draw, "가A", font) + line_spacing
+        panel_height = max(110, min(height // 2, margin * 2 + (line_height * max(1, len(wrapped_lines)))))
         panel_top = height - panel_height
+
         draw.rectangle([(0, panel_top), (width, height)], fill=(0, 0, 0))
 
-        wrapped_lines: List[str] = []
-        words = overlay_text.split()
-        current = []
-        for word in words:
-            trial = " ".join(current + [word])
-            if len(trial) > 48 and current:
-                wrapped_lines.append(" ".join(current))
-                current = [word]
-            else:
-                current.append(word)
-        if current:
-            wrapped_lines.append(" ".join(current))
-
         y = panel_top + margin
-        for line in wrapped_lines[:6]:
-            draw.text((margin, y), line, fill=(255, 255, 255))
-            y += 18
+        for line in wrapped_lines:
+            draw.text((margin, y), line, fill=(255, 255, 255), font=font)
+            y += line_height
 
         image.save(output_path)
+
+
+def _load_overlay_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    for candidate in FONT_CANDIDATES:
+        if Path(candidate).exists():
+            try:
+                return ImageFont.truetype(candidate, size=size)
+            except OSError:
+                continue
+    return ImageFont.load_default()
+
+
+def _measure_text_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont) -> int:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    return max(0, bbox[2] - bbox[0])
+
+
+def _measure_text_height(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont) -> int:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    return max(0, bbox[3] - bbox[1])
+
+
+def _wrap_overlay_text(
+    draw: ImageDraw.ImageDraw,
+    text: str,
+    font: ImageFont.ImageFont,
+    max_width: int,
+) -> List[str]:
+    paragraphs = [segment.strip() for segment in text.splitlines() if segment.strip()]
+    if not paragraphs:
+        return [text.strip()] if text.strip() else [""]
+
+    lines: List[str] = []
+    for paragraph in paragraphs:
+        words = paragraph.split()
+        if len(words) > 1:
+            current = words[0]
+            for word in words[1:]:
+                trial = f"{current} {word}"
+                if _measure_text_width(draw, trial, font) <= max_width:
+                    current = trial
+                else:
+                    lines.append(current)
+                    current = word
+            lines.append(current)
+            continue
+
+        current = ""
+        for char in paragraph:
+            trial = f"{current}{char}"
+            if current and _measure_text_width(draw, trial, font) > max_width:
+                lines.append(current)
+                current = char
+            else:
+                current = trial
+        if current:
+            lines.append(current)
+    return lines[:6]
 
 
 def compute_lcs_length(a_tokens: List[str], b_tokens: List[str]) -> int:
