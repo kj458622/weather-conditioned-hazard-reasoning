@@ -177,42 +177,38 @@ class ModelRunner:
         visibility = weather_token.get("visibility", "medium")
         illumination = weather_token.get("illumination", "day")
         road_condition = weather_token.get("road_condition", "clear")
-        weather_type_ko = weather_label_ko(weather_type)
-        visibility_ko = visibility_label_ko(visibility)
-        road_condition_ko = road_condition_label_ko(road_condition)
-
         hazard_object = "vehicle"
         risk_level = "medium"
         reason = "front vehicle requires caution under current conditions"
-        explanation = "전방 상황에 주의가 필요합니다."
+        explanation = "Caution is required for the current front-view scene."
 
         if "ped" in name or "walk" in name or "cross" in name:
             hazard_object = "pedestrian"
             risk_level = "high"
             reason = f"pedestrian entering or near ego lane under {visibility} visibility"
             explanation = (
-                f"보행자가 주행 경로 근처에 있으며, {weather_type_ko} 상태로 인해 가시성이 {visibility_ko} 수준이라 "
-                "조기 대응이 어려워 충돌 위험이 높습니다."
+                f"A pedestrian is near the driving path, and {weather_type} conditions with {visibility} visibility "
+                "can delay early response, increasing collision risk."
             )
         elif "car" in name or "vehicle" in name or "brake" in name:
             hazard_object = "front vehicle"
             risk_level = "high" if visibility == "low" or road_condition == "slippery" else "medium"
             reason = f"front vehicle may slow down abruptly with {weather_type} and {road_condition} road surface"
             explanation = (
-                f"앞 차량의 속도 변화 가능성이 있으며, {weather_type_ko} 환경과 {road_condition_ko} 노면으로 인해 "
-                "제동 거리 확보가 더 필요합니다."
+                f"The front vehicle may change speed unexpectedly, and {weather_type} conditions with a {road_condition} "
+                "road surface require additional stopping distance."
             )
         elif "lane" in name or "curve" in name:
             hazard_object = "lane boundary"
             risk_level = "medium"
             reason = f"lane boundary is less reliable under {weather_type} weather"
             explanation = (
-                f"차선 경계가 {weather_type_ko} 환경에서 불명확해질 수 있어 차로 유지 판단이 어려워질 수 있습니다."
+                f"Lane boundaries may become less reliable under {weather_type} conditions, making lane keeping harder."
             )
 
         if illumination == "night":
             risk_level = "high" if risk_level == "medium" else risk_level
-            explanation += " 야간 조도로 인해 추가적인 시야 제약이 있습니다."
+            explanation += " Nighttime illumination adds further visibility constraints."
 
         return normalize_reasoning_output(
             {

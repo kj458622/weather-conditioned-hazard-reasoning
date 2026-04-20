@@ -23,7 +23,7 @@ DEFAULT_REASONING_OUTPUT = {
     "hazard_object": "unknown",
     "risk_level": "medium",
     "reason": "scene requires caution under the provided weather condition",
-    "explanation": "주어진 날씨 조건에서 주의가 필요한 장면입니다.",
+    "explanation": "The scene requires caution under the provided weather condition.",
 }
 
 WEATHER_LABELS_KO = {
@@ -214,14 +214,14 @@ def save_text(text: str, path: os.PathLike[str] | str) -> None:
 
 
 def make_free_text(structured_output: Dict[str, str]) -> str:
-    """Return a Korean explanation sentence from structured reasoning output."""
+    """Return an explanation sentence from structured reasoning output."""
     explanation = structured_output.get("explanation", "").strip()
     if explanation:
         return explanation
     hazard_object = structured_output.get("hazard_object", "객체")
     risk_level = structured_output.get("risk_level", "중간")
     reason = structured_output.get("reason", "추가 주의가 필요합니다")
-    return f"{hazard_object}와 관련해 {reason}. 위험도는 {risk_level} 수준입니다."
+    return f"The primary hazard is {hazard_object}. Reason: {reason}. Risk level: {risk_level}."
 
 
 def weather_label_ko(value: str) -> str:
