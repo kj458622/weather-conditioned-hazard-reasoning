@@ -45,30 +45,25 @@ def build_reasoning_user_prompt(weather_token: Dict[str, str]) -> str:
 
 
 def build_reasoning_user_prompt_no_weather() -> str:
-    """User prompt without any weather context — pure image-based reasoning."""
+    """User prompt — scene-only, no weather context at all."""
     payload = {
         "image": "<image>",
         "instruction": (
-            "Analyze the driving scene and explain why it is risky for autonomous driving. "
+            "What is the most dangerous object or situation visible in this image? "
             "Choose exactly one primary hazard object. "
-            "Keep the reason concise but scene-specific. "
-            "If relevant, mention cues such as crosswalk, parked vehicles, occlusion, "
-            "dense traffic, lane boundary ambiguity, or a rider/two-wheeler. "
-            "Provide an English explanation of the hazard."
+            "Return structured JSON only."
         ),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
 def build_reasoning_system_prompt_no_weather() -> str:
-    """System prompt for pure image-based reasoning without weather context."""
+    """System prompt — scene-only, no mention of weather or driving conditions."""
     return (
-        "You are an autonomous-driving hazard reasoning assistant. "
-        "Analyze the image and explain why the scene is risky for autonomous driving. "
-        "Focus on one primary hazard object only. "
-        "Prefer scene-specific cues such as crosswalk, occlusion, dense traffic, "
-        "lane ambiguity, curve, merge, rider, or limited sight distance when visible. "
-        "Avoid generic phrases like 'be careful' unless you also mention a concrete reason. "
+        "You are a scene understanding assistant. "
+        "Look at the image and identify the most dangerous object or situation. "
+        "Do not consider weather or environmental conditions. "
+        "Focus only on what objects or situations in the scene pose a risk. "
         "Return structured JSON only with keys: "
         "hazard_object, risk_level, reason, explanation."
     )
