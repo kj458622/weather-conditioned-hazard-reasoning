@@ -140,27 +140,22 @@ def run_grounding(model, processor, device, image_path: str,
     W, H = img.size
 
     # Qwen2.5-VL grounding 공식 프롬프트 형식
-    # 단계 분리: 먼저 hazard object 식별 → 그 다음 bbox 요청
+    # v3: weather prefix를 한 줄로 압축, 포맷 예시를 concrete 값으로 고정
+    BASE_PROMPT = (
+        "Identify the single most dangerous object for the ego vehicle.\n"
+        "Use ONLY this format (no extra text):\n"
+        "HAZARD: pedestrian\n"
+        "RISK: high\n"
+        "BOX: 120,80,200,190\n"
+        "EXPLANATION: one sentence reason\n"
+        "---\n"
+    )
     if no_weather:
-        user_text = (
-            "Find the most dangerous object in this driving scene.\n"
-            "Reply in this exact format:\n"
-            "HAZARD: <name>\n"
-            "RISK: <high/medium/low>\n"
-            "BOX: <x1>,<y1>,<x2>,<y2>\n"
-            "EXPLANATION: <reason>"
-        )
+        user_text = BASE_PROMPT
     else:
         wt = weather_token
-        user_text = (
-            f"Weather: {wt.get('weather_type','?')}, visibility: {wt.get('visibility','?')}, road: {wt.get('road_condition','?')}.\n"
-            "Find the most dangerous object in this driving scene given the weather.\n"
-            "Reply in this exact format:\n"
-            "HAZARD: <name>\n"
-            "RISK: <high/medium/low>\n"
-            "BOX: <x1>,<y1>,<x2>,<y2>\n"
-            "EXPLANATION: <reason including weather impact>"
-        )
+        prefix = f"[{wt.get('weather_type','?')}, {wt.get('visibility','?')} visibility, {wt.get('road_condition','?')} road] "
+        user_text = prefix + BASE_PROMPT
 
     messages = [
         {"role": "user", "content": [
@@ -178,7 +173,7 @@ def run_grounding(model, processor, device, image_path: str,
     inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=120, do_sample=False)
+        generated = model.generate(**inputs, max_new_tokens=80, do_sample=False)
 
     trimmed = generated[:, inputs["input_ids"].shape[-1]:]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=True,
