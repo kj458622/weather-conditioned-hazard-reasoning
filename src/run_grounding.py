@@ -143,22 +143,26 @@ def run_grounding(model, processor, device, image_path: str,
         img = img.resize((int(img.width * ratio), int(img.height * ratio)))
     W, H = img.size
 
-    # Qwen2.5-VL grounding 공식 프롬프트 형식
-    # v3: weather prefix를 한 줄로 압축, 포맷 예시를 concrete 값으로 고정
-    BASE_PROMPT = (
-        "Identify the single most dangerous object for the ego vehicle.\n"
-        "Reply ONLY in this format:\n"
-        "HAZARD: <object name>\n"
-        "RISK: <high or medium or low>\n"
-        "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
-        "EXPLANATION: <one sentence why it is dangerous>"
-    )
     if no_weather:
-        user_text = BASE_PROMPT
+        user_text = (
+            "Identify the single most dangerous object for the ego vehicle in this driving scene.\n"
+            "Reply ONLY in this format:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high or medium or low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
+            "EXPLANATION: <why this object is dangerous in this scene>"
+        )
     else:
         wt = weather_token
-        prefix = f"[{wt.get('weather_type','?')}, {wt.get('visibility','?')} visibility, {wt.get('road_condition','?')} road]\n"
-        user_text = prefix + BASE_PROMPT
+        user_text = (
+            f"Weather: {wt.get('weather_type','?')}, visibility: {wt.get('visibility','?')}, road: {wt.get('road_condition','?')}.\n"
+            "Identify the single most dangerous object for the ego vehicle given the weather condition.\n"
+            "Reply ONLY in this format:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high or medium or low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
+            "EXPLANATION: <why this object is dangerous AND how the weather makes it more dangerous>"
+        )
 
     messages = [
         {"role": "user", "content": [
@@ -176,7 +180,7 @@ def run_grounding(model, processor, device, image_path: str,
     inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=80, do_sample=False)
+        generated = model.generate(**inputs, max_new_tokens=150, do_sample=False)
 
     trimmed = generated[:, inputs["input_ids"].shape[-1]:]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=True,
