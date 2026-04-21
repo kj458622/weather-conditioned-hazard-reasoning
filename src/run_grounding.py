@@ -294,6 +294,9 @@ def main():
                    "weather": weather,
                    "bbox_no": r_no["bbox"], "bbox_wt": r_wt["bbox"]},
                   open(sample_dir / "result.json", "w"), indent=2)
+        # save raw outputs for debugging
+        json.dump({"no_token_raw": r_no["raw"], "with_token_raw": r_wt["raw"]},
+                  open(sample_dir / "raw.json", "w"), indent=2, ensure_ascii=False)
         print(f"  Saved to {sample_dir}")
 
     print("\nDone.")
