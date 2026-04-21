@@ -320,7 +320,7 @@ def make_comparison(img_path: Path, r_no: dict, r_wt: dict,
     font_body    = load_font(18)
     font_title   = load_font(24)
 
-    PANEL_H = 130
+    PANEL_H = 180
     TITLE_H = 50
     GAP = 12
     TOTAL_W = TARGET_W * 2 + GAP * 3
@@ -355,7 +355,7 @@ def make_comparison(img_path: Path, r_no: dict, r_wt: dict,
         draw.rectangle([x_off, py, x_off+TARGET_W, py+36], fill=badge_color)
         draw.text((x_off+8, py+7), condition, fill=(255,255,255), font=font_badge)
 
-        expl = pred.get("explanation","")[:180]
+        expl = pred.get("explanation","")[:400]
         words = expl.split()
         line, lines = [], []
         for w in words:
@@ -366,9 +366,10 @@ def make_comparison(img_path: Path, r_no: dict, r_wt: dict,
                 line.append(w)
         if line: lines.append(" ".join(line))
         y = py + 42
-        for ln in lines[:4]:
+        max_lines = (PANEL_H - 48) // 22
+        for ln in lines[:max_lines]:
             draw.text((x_off+8, y), ln, fill=(210,210,210), font=font_body)
-            y += 20
+            y += 22
 
     # no token
     draw_panel(GAP, img.copy(), r_no["bbox"], r_no["prediction"],
