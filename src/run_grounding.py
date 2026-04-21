@@ -143,32 +143,23 @@ def run_grounding(model, processor, device, image_path: str,
     # 단계 분리: 먼저 hazard object 식별 → 그 다음 bbox 요청
     if no_weather:
         user_text = (
-            "You are an autonomous driving safety assistant. "
-            "Look at this driving scene image carefully. "
-            "What is the single most dangerous object or hazard visible? "
-            "First name the hazard object, then provide its bounding box coordinates, "
-            "then explain why it is dangerous. "
-            "Format your response as:\n"
-            "HAZARD: <object name>\n"
+            "Find the most dangerous object in this driving scene.\n"
+            "Reply in this exact format:\n"
+            "HAZARD: <name>\n"
             "RISK: <high/medium/low>\n"
-            "BOX: <x1>,<y1>,<x2>,<y2> (pixel coordinates)\n"
-            "EXPLANATION: <one sentence why it is dangerous>"
+            "BOX: <x1>,<y1>,<x2>,<y2>\n"
+            "EXPLANATION: <reason>"
         )
     else:
         wt = weather_token
         user_text = (
-            "You are an autonomous driving safety assistant. "
-            f"Current weather: {wt.get('weather_type','unknown')}, "
-            f"visibility: {wt.get('visibility','unknown')}, "
-            f"road condition: {wt.get('road_condition','unknown')}. "
-            "Given these weather conditions, what is the single most dangerous object in this scene? "
-            "First name the hazard object, then provide its bounding box coordinates, "
-            "then explain why this weather makes it more dangerous. "
-            "Format your response as:\n"
-            "HAZARD: <object name>\n"
+            f"Weather: {wt.get('weather_type','?')}, visibility: {wt.get('visibility','?')}, road: {wt.get('road_condition','?')}.\n"
+            "Find the most dangerous object in this driving scene given the weather.\n"
+            "Reply in this exact format:\n"
+            "HAZARD: <name>\n"
             "RISK: <high/medium/low>\n"
-            "BOX: <x1>,<y1>,<x2>,<y2> (pixel coordinates)\n"
-            "EXPLANATION: <one sentence including weather impact>"
+            "BOX: <x1>,<y1>,<x2>,<y2>\n"
+            "EXPLANATION: <reason including weather impact>"
         )
 
     messages = [
