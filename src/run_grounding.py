@@ -133,40 +133,45 @@ def run_grounding(model, processor, device, image_path: str,
     from PIL import Image as PILImage
 
     img = PILImage.open(image_path).convert("RGB")
-    # 이미지 크기 제한 (VRAM 절약)
     MAX_SIZE = 640
     if max(img.size) > MAX_SIZE:
         ratio = MAX_SIZE / max(img.size)
         img = img.resize((int(img.width * ratio), int(img.height * ratio)))
     W, H = img.size
 
+    # Qwen2.5-VL grounding 공식 프롬프트 형식
+    # 단계 분리: 먼저 hazard object 식별 → 그 다음 bbox 요청
     if no_weather:
-        system = (
-            "You are a hazard detection assistant for autonomous driving. "
-            "Identify the single most dangerous object in the scene. "
-            "Output the bounding box of that object using this exact format: "
-            "<|box_start|>(x1,y1),(x2,y2)<|box_end|> where coordinates are 0-1000 normalized. "
-            "Then output JSON: {\"hazard_object\": \"...\", \"risk_level\": \"high/medium/low\", \"explanation\": \"...\"}"
+        user_text = (
+            "You are an autonomous driving safety assistant. "
+            "Look at this driving scene image carefully. "
+            "What is the single most dangerous object or hazard visible? "
+            "First name the hazard object, then provide its bounding box coordinates, "
+            "then explain why it is dangerous. "
+            "Format your response as:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high/medium/low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> (pixel coordinates)\n"
+            "EXPLANATION: <one sentence why it is dangerous>"
         )
-        user_text = "Find the most dangerous object. Output its bounding box then JSON."
     else:
         wt = weather_token
-        system = (
-            "You are a weather-conditioned hazard detection assistant for autonomous driving. "
-            "Given the image and weather conditions, identify the single most dangerous object. "
-            "Output the bounding box of that object using this exact format: "
-            "<|box_start|>(x1,y1),(x2,y2)<|box_end|> where coordinates are 0-1000 normalized. "
-            "Then output JSON: {\"hazard_object\": \"...\", \"risk_level\": \"high/medium/low\", \"explanation\": \"...\"}"
-        )
         user_text = (
-            f"Weather: {wt.get('weather_type','?')}, "
-            f"visibility: {wt.get('visibility','?')}, "
-            f"road: {wt.get('road_condition','?')}. "
-            "Find the most dangerous object under these conditions. Output its bounding box then JSON."
+            "You are an autonomous driving safety assistant. "
+            f"Current weather: {wt.get('weather_type','unknown')}, "
+            f"visibility: {wt.get('visibility','unknown')}, "
+            f"road condition: {wt.get('road_condition','unknown')}. "
+            "Given these weather conditions, what is the single most dangerous object in this scene? "
+            "First name the hazard object, then provide its bounding box coordinates, "
+            "then explain why this weather makes it more dangerous. "
+            "Format your response as:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high/medium/low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> (pixel coordinates)\n"
+            "EXPLANATION: <one sentence including weather impact>"
         )
 
     messages = [
-        {"role": "system", "content": [{"type": "text", "text": system}]},
         {"role": "user", "content": [
             {"type": "image", "image": img},
             {"type": "text",  "text": user_text},
@@ -174,29 +179,46 @@ def run_grounding(model, processor, device, image_path: str,
     ]
 
     chat_text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = processor(text=[chat_text], images=[img], return_tensors="pt")
+    inputs = processor(
+        text=[chat_text], images=[img],
+        return_tensors="pt",
+        max_pixels=640*640,
+    )
     inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=150, do_sample=False)
+        generated = model.generate(**inputs, max_new_tokens=120, do_sample=False)
 
     trimmed = generated[:, inputs["input_ids"].shape[-1]:]
-    decoded = processor.batch_decode(trimmed, skip_special_tokens=False,
+    decoded = processor.batch_decode(trimmed, skip_special_tokens=True,
                                      clean_up_tokenization_spaces=True)
     raw = decoded[0] if decoded else ""
 
-    bbox = parse_bbox(raw, W, H)
+    # 파싱: HAZARD/RISK/BOX/EXPLANATION 형식
+    hazard = "unknown"
+    risk   = "unknown"
+    bbox   = None
+    explanation = raw[:200]
 
-    # JSON 파싱
-    clean = re.sub(r'<\|[^|]+\|>', '', raw)
-    json_match = re.search(r'\{.*\}', clean, re.DOTALL)
-    result = {"hazard_object": "unknown", "risk_level": "unknown", "explanation": raw[:200]}
-    if json_match:
-        try:
-            result = json.loads(json_match.group())
-        except Exception:
-            pass
+    m = re.search(r'HAZARD:\s*(.+)', raw)
+    if m: hazard = m.group(1).strip()
 
+    m = re.search(r'RISK:\s*(.+)', raw)
+    if m: risk = m.group(1).strip().lower()
+
+    m = re.search(r'BOX:\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', raw)
+    if m:
+        x1, y1, x2, y2 = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+        # pixel 좌표가 이미지 범위 안에 있는지 확인
+        x1, x2 = max(0, min(x1, W)), max(0, min(x2, W))
+        y1, y2 = max(0, min(y1, H)), max(0, min(y2, H))
+        if x2 > x1 and y2 > y1:
+            bbox = (x1, y1, x2, y2)
+
+    m = re.search(r'EXPLANATION:\s*(.+)', raw, re.DOTALL)
+    if m: explanation = m.group(1).strip()[:300]
+
+    result = {"hazard_object": hazard, "risk_level": risk, "explanation": explanation}
     return {"bbox": bbox, "prediction": result, "raw": raw}
 
 
