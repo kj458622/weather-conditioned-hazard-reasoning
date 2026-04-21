@@ -34,6 +34,10 @@ WEATHER_TOKENS = {
     "img_0008": {"weather_type": "fog",   "visibility": "medium", "illumination": "day",   "road_condition": "clear"},
     "img_0009": {"weather_type": "night", "visibility": "low",    "illumination": "night", "road_condition": "clear"},
     "img_0010": {"weather_type": "night", "visibility": "low",    "illumination": "night", "road_condition": "clear"},
+    "img_0011": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
+    "img_0012": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
+    "img_0013": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
+    "img_0014": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
 }
 
 
