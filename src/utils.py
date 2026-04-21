@@ -251,12 +251,12 @@ def save_overlay_visualization(
         draw = ImageDraw.Draw(image)
         width, height = image.size
         margin = 16
-        font = _load_overlay_font(max(20, width // 45))
-        line_spacing = max(8, font.size // 3)
+        font = _load_overlay_font(max(28, width // 28))
+        line_spacing = max(10, font.size // 3)
         max_text_width = width - (margin * 2)
         wrapped_lines = _wrap_overlay_text(draw, overlay_text, font, max_text_width)
         line_height = _measure_text_height(draw, "가A", font) + line_spacing
-        panel_height = max(110, min(height // 2, margin * 2 + (line_height * max(1, len(wrapped_lines)))))
+        panel_height = max(140, min(height // 2, margin * 2 + (line_height * max(1, len(wrapped_lines)))))
         panel_top = height - panel_height
 
         draw.rectangle([(0, panel_top), (width, height)], fill=(0, 0, 0))

@@ -1,0 +1,172 @@
+[
+  {
+    "id": "img_0001",
+    "image_path": "data/images/img_0001_snow_pedestrian.png",
+    "scene_category": "pedestrian",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "medium",
+      "reason": "many pedestrians near ego path under snowy medium-visibility conditions",
+      "explanation_ko": "보행자들이 차로 근처에 있으며 눈으로 인해 가시성이 낮고 노면 상태가 좋지 않아 조기 대응이 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0002",
+    "image_path": "data/images/img_0002_snow_pedestrian.png",
+    "scene_category": "pedestrian",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "potential pedestrians occluded by parked vehicles near crosswalk under snowy low-visibility conditions",
+      "explanation_ko": "전방 횡단보도 인근에 정차된 차량들로 인해 보행자 출현 여부를 명확히 확인하기 어렵고, 눈으로 인해 가시성이 낮아 돌발 보행자에 대한 조기 인지가 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0003",
+    "image_path": "data/images/img_0003_snow_cyclist.png",
+    "scene_category": "cyclist",
+    "weather": {
+      "weather_type": "fog",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "clear"
+    },
+    "target": {
+      "hazard_object": "cyclist",
+      "risk_level": "medium",
+      "reason": "nearby cyclist moving alongside ego vehicle under snowy medium-visibility conditions",
+      "explanation_ko": "차량 옆에서 자전거 이용자가 주행 중이며, 눈으로 인해 가시성과 노면 상태가 저하되어 자전거의 균형 흔들림이나 예상치 못한 경로 변경이 발생할 수 있어 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0004",
+    "image_path": "data/images/img_0004_rain_pedestrian.png",
+    "scene_category": "pedestrian",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "pedestrian",
+      "risk_level": "high",
+      "reason": "occluded pedestrian risk at crosswalk due to lane-changing vehicle under rainy low-visibility conditions",
+      "explanation_ko": "전방 차량이 차선 변경 중 시야를 가리고 있고 그 앞에 횡단보도가 있어 보행자 출현 여부를 확인하기 어려운 상황임. 비로 인해 가시성과 노면 상태가 저하되어 돌발 보행자에 대한 대응이 늦어질 수 있어 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0005",
+    "image_path": "data/images/img_0005_rain_scooter rider.png",
+    "scene_category": "two_wheeler",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "two_wheeler",
+      "risk_level": "high",
+      "reason": "two-wheeler emergence ahead under rainy medium-visibility conditions",
+      "explanation_ko": "비가 내리는 상황에서 킥보드 이용자가 차량 전방에 갑자기 나타나 반응 시간이 매우 짧고, 노면이 미끄러워 제동 및 회피가 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0006",
+    "image_path": "data/images/img_0006_rain_cyclist.png",
+    "scene_category": "cyclist",
+    "weather": {
+      "weather_type": "snow",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "slippery"
+    },
+    "target": {
+      "hazard_object": "cyclist",
+      "risk_level": "medium",
+      "reason": "cyclist traveling in adjacent lane under rainy conditions",
+      "explanation_ko": "비가 내리는 상황에서 옆차로에 자전거 이용자가 주행하고 있어, 미끄러짐이나 균형 상실, 갑작스러운 차로 쪽 접근 가능성으로 인해 충돌 위험이 존재함"
+    }
+  },
+  {
+    "id": "img_0007",
+    "image_path": "data/images/img_0007_fog_front_vehicle.png",
+    "scene_category": "front_vehicle",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "wet"
+    },
+    "target": {
+      "hazard_object": "front_vehicle",
+      "risk_level": "high",
+      "reason": "dense traffic ahead under foggy low-visibility conditions",
+      "explanation_ko": "안개로 인해 전방 차량의 위치와 움직임을 명확히 파악하기 어려운 상태에서 교통량이 많아, 선행 차량의 급정지나 흐름 변화에 대한 대응 시간이 부족해질 수 있음"
+    }
+  },
+  {
+    "id": "img_0008",
+    "image_path": "data/images/img_0008_fog_front_vehicle.png",
+    "scene_category": "front_vehicle",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "medium",
+      "illumination": "day",
+      "road_condition": "wet"
+    },
+    "target": {
+      "hazard_object": "front_vehicle",
+      "risk_level": "high",
+      "reason": "potential path crossing from opposing vehicle making U-turn under foggy medium-visibility conditions",
+      "explanation_ko": "안개로 인해 전방 시야가 제한된 상황에서 반대편 차선의 차량이 유턴을 시도하고 있어 차량 진행 경로를 가로지를 가능성이 있으며, 상대 차량의 움직임을 늦게 인지할 수 있어 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0009",
+    "image_path": "data/images/img_0009_night_unknown_object.png",
+    "scene_category": "unknown_object",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "wet"
+    },
+    "target": {
+      "hazard_object": "unknown_object",
+      "risk_level": "medium",
+      "reason": "unpredictable hazard emergence under nighttime low-visibility conditions",
+      "explanation_ko": "야간으로 인해 전반적인 시야 확보가 어려운 상황이며, 어두운 환경 때문에 차량, 보행자, 이륜 이동체 등 위험 요소가 어느 위치에서 나타날지 미리 파악하기 어려워 충돌 위험이 높음"
+    }
+  },
+  {
+    "id": "img_0010",
+    "image_path": "data/images/img_0010_night_cyclist.png",
+    "scene_category": "cyclist",
+    "weather": {
+      "weather_type": "rain",
+      "visibility": "low",
+      "illumination": "day",
+      "road_condition": "wet"
+    },
+    "target": {
+      "hazard_object": "cyclist",
+      "risk_level": "medium",
+      "reason": "cyclist traveling beside dense pedestrian environment under nighttime urban conditions",
+      "explanation_ko": "야간 번화가 환경에서 인도에 많은 보행자가 밀집해 있고 옆차로에 자전거 이용자가 주행 중이어서, 보행자의 차로 유입이나 자전거의 예상치 못한 움직임으로 인한 충돌 위험이 존재함"
+    }
+  }
+]

@@ -44,6 +44,36 @@ def build_reasoning_user_prompt(weather_token: Dict[str, str]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
+def build_reasoning_user_prompt_no_weather() -> str:
+    """User prompt without any weather context — pure image-based reasoning."""
+    payload = {
+        "image": "<image>",
+        "instruction": (
+            "Analyze the driving scene and explain why it is risky for autonomous driving. "
+            "Choose exactly one primary hazard object. "
+            "Keep the reason concise but scene-specific. "
+            "If relevant, mention cues such as crosswalk, parked vehicles, occlusion, "
+            "dense traffic, lane boundary ambiguity, or a rider/two-wheeler. "
+            "Provide an English explanation of the hazard."
+        ),
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def build_reasoning_system_prompt_no_weather() -> str:
+    """System prompt for pure image-based reasoning without weather context."""
+    return (
+        "You are an autonomous-driving hazard reasoning assistant. "
+        "Analyze the image and explain why the scene is risky for autonomous driving. "
+        "Focus on one primary hazard object only. "
+        "Prefer scene-specific cues such as crosswalk, occlusion, dense traffic, "
+        "lane ambiguity, curve, merge, rider, or limited sight distance when visible. "
+        "Avoid generic phrases like 'be careful' unless you also mention a concrete reason. "
+        "Return structured JSON only with keys: "
+        "hazard_object, risk_level, reason, explanation."
+    )
+
+
 def build_weather_system_prompt() -> str:
     """Optional prompt for weather token estimation from an image."""
     return (

@@ -12,7 +12,9 @@ from tqdm import tqdm
 from evaluate import evaluate_predictions
 from prompting import (
     build_reasoning_system_prompt,
+    build_reasoning_system_prompt_no_weather,
     build_reasoning_user_prompt,
+    build_reasoning_user_prompt_no_weather,
     build_weather_system_prompt,
     build_weather_user_prompt,
 )
@@ -88,13 +90,19 @@ class ModelRunner:
             }
         return self._heuristic_weather(image_path)
 
-    def infer_hazard(self, image_path: str, weather_token: Dict[str, str]) -> Dict[str, Any]:
-        """Generate weather-conditioned hazard reasoning."""
+    def infer_hazard(self, image_path: str, weather_token: Dict[str, str], no_weather: bool = False) -> Dict[str, Any]:
+        """Generate hazard reasoning with or without weather context."""
         if self.backend == "transformers":
+            if no_weather:
+                system_prompt = build_reasoning_system_prompt_no_weather()
+                user_prompt = build_reasoning_user_prompt_no_weather()
+            else:
+                system_prompt = build_reasoning_system_prompt()
+                user_prompt = build_reasoning_user_prompt(weather_token)
             raw_text = self._run_multimodal_generation(
                 image_path=image_path,
-                system_prompt=build_reasoning_system_prompt(),
-                user_prompt=build_reasoning_user_prompt(weather_token),
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
                 max_new_tokens=256,
             )
             parsed = safe_json_loads(raw_text)
@@ -255,6 +263,7 @@ def process_record(
     model_runner: ModelRunner,
     output_dir: Path,
     save_overlay: bool,
+    no_weather: bool = False,
 ) -> Dict[str, Any]:
     """Run preprocessing, reasoning, and persistence for one sample."""
     image_path = record.get("image_path")
@@ -274,7 +283,7 @@ def process_record(
     parse_ok = True
     raw_model_output = None
     try:
-        prediction = model_runner.infer_hazard(image_path=image_path, weather_token=weather_token)
+        prediction = model_runner.infer_hazard(image_path=image_path, weather_token=weather_token, no_weather=no_weather)
     except Exception as error:
         parse_ok = False
         raw_model_output = f"runtime_error: {error}"
