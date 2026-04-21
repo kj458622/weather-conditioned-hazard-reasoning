@@ -133,6 +133,11 @@ def run_grounding(model, processor, device, image_path: str,
     from PIL import Image as PILImage
 
     img = PILImage.open(image_path).convert("RGB")
+    # 이미지 크기 제한 (VRAM 절약)
+    MAX_SIZE = 640
+    if max(img.size) > MAX_SIZE:
+        ratio = MAX_SIZE / max(img.size)
+        img = img.resize((int(img.width * ratio), int(img.height * ratio)))
     W, H = img.size
 
     if no_weather:
@@ -173,7 +178,7 @@ def run_grounding(model, processor, device, image_path: str,
     inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=300, do_sample=False)
+        generated = model.generate(**inputs, max_new_tokens=150, do_sample=False)
 
     trimmed = generated[:, inputs["input_ids"].shape[-1]:]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=False,
