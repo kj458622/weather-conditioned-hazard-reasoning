@@ -202,9 +202,13 @@ def run_grounding(model, processor, device, image_path: str,
     m = re.search(r'BOX:\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)', raw)
     if m:
         x1, y1, x2, y2 = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
-        # pixel 좌표가 이미지 범위 안에 있는지 확인
-        x1, x2 = max(0, min(x1, W)), max(0, min(x2, W))
-        y1, y2 = max(0, min(y1, H)), max(0, min(y2, H))
+        # padding 20% to make bbox more visible
+        pad_x = int((x2 - x1) * 0.2)
+        pad_y = int((y2 - y1) * 0.2)
+        x1 = max(0, x1 - pad_x)
+        y1 = max(0, y1 - pad_y)
+        x2 = min(W, x2 + pad_x)
+        y2 = min(H, y2 + pad_y)
         if x2 > x1 and y2 > y1:
             bbox = (x1, y1, x2, y2)
 
