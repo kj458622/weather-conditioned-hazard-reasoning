@@ -28,7 +28,7 @@ WEATHER_TOKENS = {
     "img_0002": {"weather_type": "snow",  "visibility": "low",    "illumination": "day",   "road_condition": "slippery"},
     "img_0003": {"weather_type": "snow",  "visibility": "medium", "illumination": "day",   "road_condition": "slippery"},
     "img_0004": {"weather_type": "rain",  "visibility": "low",    "illumination": "day",   "road_condition": "wet"},
-    "img_0005": {"weather_type": "rain",  "visibility": "medium", "illumination": "day",   "road_condition": "wet"},
+    "img_0005": {"weather_type": "rain",  "visibility": "low",    "illumination": "day",   "road_condition": "wet"},
     "img_0006": {"weather_type": "rain",  "visibility": "low",    "illumination": "day",   "road_condition": "wet"},
     "img_0007": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
     "img_0008": {"weather_type": "fog",   "visibility": "medium", "illumination": "day",   "road_condition": "clear"},
@@ -38,7 +38,14 @@ WEATHER_TOKENS = {
     "img_0012": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
     "img_0013": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
     "img_0014": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
+    "img_0015": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
+    "img_0016": {"weather_type": "fog",   "visibility": "low",    "illumination": "day",   "road_condition": "clear"},
 }
+
+# 실험 대상 이미지 (None이면 WEATHER_TOKENS 전체 사용)
+TARGET_IDS = ["img_0001", "img_0005", "img_0006", "img_0014", "img_0015", "img_0016"]
+
+N_SAMPLES = 5  # 이미지당 샘플링 횟수
 
 
 def load_font(size=20):
@@ -180,7 +187,10 @@ def run_grounding(model, processor, device, image_path: str,
     inputs = {k: v.to(device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
     with torch.no_grad():
-        generated = model.generate(**inputs, max_new_tokens=150, do_sample=False)
+        generated = model.generate(
+            **inputs, max_new_tokens=150,
+            do_sample=True, temperature=0.7, top_p=0.9
+        )
 
     trimmed = generated[:, inputs["input_ids"].shape[-1]:]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=True,
@@ -306,6 +316,70 @@ def main():
         print(f"  Saved to {sample_dir}")
 
     print("\nDone.")
+
+
+def pick_best(results: list) -> dict:
+    """bbox 있는 것 중 면적 최대인 결과 반환, 없으면 첫 번째."""
+    valid = [r for r in results if r["bbox"] is not None]
+    if valid:
+        return max(valid, key=lambda r: (r["bbox"][2]-r["bbox"][0]) * (r["bbox"][3]-r["bbox"][1]))
+    return results[0]
+
+
+def run_grounding_sample(model, processor, device, img_path: str,
+                         weather: dict, use_weather: bool,
+                         out_dir: Path, n_samples: int = N_SAMPLES):
+    """한 모드(no_weather/with_token)를 n_samples번 실행해 best 결과 반환."""
+    tag         = "with_token" if use_weather else "no_weather"
+    badge_color = (50, 140, 60) if use_weather else (80, 80, 170)
+    condition   = (
+        f"With Weather Token  ({weather['weather_type']} · {weather['road_condition']})"
+        if use_weather else "Without Weather Token"
+    )
+
+    mode_dir = out_dir / tag
+    mode_dir.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    for i in range(n_samples):
+        r = run_grounding(model, processor, device, img_path,
+                          weather_token=weather if use_weather else None,
+                          no_weather=not use_weather)
+        bbox_ok = r["bbox"] is not None
+        pred = r["prediction"]
+        print(f"    [{tag}] sample {i+1}: bbox={r['bbox']}  hazard={pred.get('hazard_object','?')}  {'✓' if bbox_ok else '✗'}")
+        r["sample_idx"] = i
+        results.append(r)
+
+        # 개별 샘플 시각화 저장
+        draw_result(
+            img_path, r["bbox"],
+            label=pred.get("hazard_object", "?"),
+            risk=pred.get("risk_level", "?"),
+            explanation=pred.get("explanation", ""),
+            out_path=mode_dir / f"sample_{i+1}.png",
+            condition=condition,
+            badge_color=badge_color,
+        )
+
+    best = pick_best(results)
+    draw_result(
+        img_path, best["bbox"],
+        label=best["prediction"].get("hazard_object", "?"),
+        risk=best["prediction"].get("risk_level", "?"),
+        explanation=best["prediction"].get("explanation", ""),
+        out_path=mode_dir / "best.png",
+        condition=condition,
+        badge_color=badge_color,
+    )
+
+    json.dump(
+        {"best": best["prediction"], "bbox": best["bbox"],
+         "all_raws": [r["raw"] for r in results]},
+        open(mode_dir / "results.json", "w"), indent=2, ensure_ascii=False
+    )
+    print(f"    [{tag}] Best: bbox={best['bbox']}  hazard={best['prediction'].get('hazard_object','?')}")
+    return best
 
 
 def make_comparison(img_path: Path, r_no: dict, r_wt: dict,

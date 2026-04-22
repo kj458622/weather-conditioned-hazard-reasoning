@@ -1,11 +1,18 @@
 # ============================================================
 # Cell 1: repo clone + 의존성 설치
 # ============================================================
-import subprocess
+import subprocess, os
 
-subprocess.run(["git", "clone",
-    "https://github.com/kj458622/weather-conditioned-hazard-reasoning",
-    "/kaggle/working/new_research"], check=True)
+REPO_DIR = "/kaggle/working/new_research"
+
+if not os.path.exists(REPO_DIR):
+    subprocess.run([
+        "git", "clone",
+        "https://github.com/kj458622/weather-conditioned-hazard-reasoning",
+        REPO_DIR
+    ], check=True)
+else:
+    subprocess.run(["git", "pull"], cwd=REPO_DIR, check=True)
 
 subprocess.run(["pip", "install", "-q",
     "bitsandbytes>=0.46.1", "accelerate", "qwen-vl-utils"], check=True)
@@ -40,73 +47,87 @@ sys.path.insert(0, "/kaggle/working/new_research/src")
 import run_grounding as rg
 importlib.reload(rg)
 
-run_grounding   = rg.run_grounding
-make_comparison = rg.make_comparison
-WEATHER_TOKENS  = rg.WEATHER_TOKENS
-print("Module loaded. Images:", len(WEATHER_TOKENS), "weather tokens defined.")
+run_grounding        = rg.run_grounding
+run_grounding_sample = rg.run_grounding_sample
+make_comparison      = rg.make_comparison
+WEATHER_TOKENS       = rg.WEATHER_TOKENS
+TARGET_IDS           = rg.TARGET_IDS
+N_SAMPLES            = rg.N_SAMPLES
+
+print(f"Module loaded. Target images: {TARGET_IDS}  |  N_SAMPLES={N_SAMPLES}")
 
 # ============================================================
-# Cell 4: 실험 실행 (grounding_v5)
+# Cell 4: 실험 실행 (multi-sample, both modes)
+# outputs/{img_id}/no_weather/  &  with_token/
+#   └── sample_1~N.png, best.png, results.json
 # ============================================================
 from pathlib import Path
 import json
 
 image_dir  = Path("/kaggle/working/new_research/data/images")
-output_dir = Path("/kaggle/working/outputs/grounding_v5")
+output_dir = Path("/kaggle/working/outputs/grounding_v7")
 output_dir.mkdir(parents=True, exist_ok=True)
 
-for img_path in sorted(image_dir.glob("*.png")):
-    parts = img_path.stem.split("_")
-    img_id = parts[0] + "_" + parts[1]
+for img_id in TARGET_IDS:
     weather = WEATHER_TOKENS.get(img_id)
     if not weather:
+        print(f"[{img_id}] weather token not found, skip.")
         continue
 
-    print(f"\n[{img_id}] {weather['weather_type']}...")
-    sample_dir = output_dir / img_id
-    sample_dir.mkdir(exist_ok=True)
+    matches = sorted(image_dir.glob(f"{img_id}_*.png"))
+    if not matches:
+        print(f"[{img_id}] image file not found, skip.")
+        continue
+    img_path = str(matches[0])
 
-    r_no = run_grounding(model, processor, "cuda", str(img_path), None, no_weather=True)
-    r_wt = run_grounding(model, processor, "cuda", str(img_path), weather, no_weather=False)
+    print(f"\n[{img_id}] {weather['weather_type']}  —  {N_SAMPLES} samples × 2 modes")
+    out_dir = output_dir / img_id
 
-    make_comparison(img_path, r_no, r_wt, weather, sample_dir / "comparison.png")
+    best_no = run_grounding_sample(model, processor, "cuda", img_path,
+                                   weather, use_weather=False, out_dir=out_dir)
+    best_wt = run_grounding_sample(model, processor, "cuda", img_path,
+                                   weather, use_weather=True,  out_dir=out_dir)
 
-    # raw + result 저장
-    json.dump({"no_token": r_no["prediction"], "with_token": r_wt["prediction"],
-               "weather": weather, "bbox_no": r_no["bbox"], "bbox_wt": r_wt["bbox"]},
-              open(sample_dir / "result.json", "w"), indent=2)
-    json.dump({"no_token_raw": r_no["raw"], "with_token_raw": r_wt["raw"]},
-              open(sample_dir / "raw.json", "w"), indent=2, ensure_ascii=False)
+    # best끼리 비교 figure
+    make_comparison(Path(img_path), best_no, best_wt, weather,
+                    out_dir / "comparison_best.png")
 
-    print(f"  no_token  : bbox={r_no['bbox']}  hazard={r_no['prediction'].get('hazard_object','?')}")
-    print(f"  with_token: bbox={r_wt['bbox']}  hazard={r_wt['prediction'].get('hazard_object','?')}")
+    # 요약 JSON
+    json.dump({
+        "img_id": img_id, "weather": weather,
+        "no_weather": {"bbox": best_no["bbox"], "prediction": best_no["prediction"]},
+        "with_token": {"bbox": best_wt["bbox"], "prediction": best_wt["prediction"]},
+    }, open(out_dir / "summary.json", "w"), indent=2, ensure_ascii=False)
 
 print("\nDone.")
 
 # ============================================================
-# Cell 5: 결과 시각화
+# Cell 5: best 비교 figure 시각화
 # ============================================================
 from PIL import Image
 import matplotlib.pyplot as plt
 
-for sample_dir in sorted(output_dir.iterdir()):
-    comp = sample_dir / "comparison.png"
+for img_id in TARGET_IDS:
+    comp = output_dir / img_id / "comparison_best.png"
     if comp.exists():
         img = Image.open(comp)
         plt.figure(figsize=(16, 5))
         plt.imshow(img)
         plt.axis("off")
-        plt.title(sample_dir.name)
+        plt.title(img_id)
         plt.tight_layout()
         plt.show()
 
 # ============================================================
 # Cell 6: raw 출력 확인 (포맷 디버깅)
 # ============================================================
-for sample_dir in sorted(output_dir.iterdir()):
-    raw_path = sample_dir / "raw.json"
-    if raw_path.exists():
-        data = json.loads(raw_path.read_text())
-        print(f"\n=== {sample_dir.name} ===")
-        print("no_token :", data.get("no_token_raw", "")[:200])
-        print("with_token:", data.get("with_token_raw", "")[:200])
+for img_id in TARGET_IDS:
+    for tag in ["no_weather", "with_token"]:
+        rjson = output_dir / img_id / tag / "results.json"
+        if rjson.exists():
+            data = json.loads(rjson.read_text())
+            print(f"\n=== {img_id} / {tag} ===")
+            print("Best hazard:", data["best"].get("hazard_object", "?"),
+                  " | bbox:", data["bbox"])
+            if data.get("all_raws"):
+                print("Sample 1 raw:", data["all_raws"][0][:200])
