@@ -412,14 +412,14 @@ def make_comparison(img_path: Path, r_no: dict, r_wt: dict,
     draw.text((GAP, 12), f"Grounding Comparison  |  {img_path.stem}  |  weather: {weather['weather_type']}",
               fill=(255,255,255), font=font_title)
 
-    def draw_panel(x_off, img_pil, bbox, pred, condition, badge_color):
+    def draw_panel(x_off, img_pil, bbox, pred, condition, badge_color, bbox_color):
         canvas.paste(img_pil, (x_off, TITLE_H + GAP))
         # bbox on img
         if bbox:
             x1,y1,x2,y2 = [int(v*scale) for v in bbox] if max(bbox) > TARGET_W else bbox
             tmp = img_pil.copy()
             d2 = ImageDraw.Draw(tmp)
-            color = (255, 60, 60) if "no" in condition.lower() else (60, 220, 60)
+            color = bbox_color
             for t in range(4):
                 d2.rectangle([x1-t, y1-t, x2+t, y2+t], outline=color)
             hazard_label = pred.get("hazard_object","?")
@@ -449,13 +449,13 @@ def make_comparison(img_path: Path, r_no: dict, r_wt: dict,
             draw.text((x_off+8, y), ln, fill=(210,210,210), font=font_body)
             y += 22
 
-    # no token
+    # no token — bbox 빨간색
     draw_panel(GAP, img.copy(), r_no["bbox"], r_no["prediction"],
-               "Without Weather Token", (80, 80, 170))
-    # with token
+               "Without Weather Token", (80, 80, 170), bbox_color=(255, 60, 60))
+    # with token — bbox 초록색
     wt_label = f"With Token  ({weather['weather_type']} · {weather['road_condition']})"
     draw_panel(GAP*2 + TARGET_W, img.copy(), r_wt["bbox"], r_wt["prediction"],
-               wt_label, (50, 140, 60))
+               wt_label, (50, 140, 60), bbox_color=(60, 220, 60))
 
     canvas.save(out_path, dpi=(300,300))
 
