@@ -9,15 +9,21 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 
 WEATHER_TOKENS = {
-    "img_0001": {"weather_type": "snow",  "visibility": "low",  "illumination": "day", "road_condition": "slippery"},
-    "img_0006": {"weather_type": "rain",  "visibility": "low",  "illumination": "day", "road_condition": "wet"},
-    "img_0014": {"weather_type": "fog",   "visibility": "low",  "illumination": "day", "road_condition": "clear"},
+    "img_0001": {"weather_type": "snow",  "visibility": "low",    "illumination": "day", "road_condition": "slippery"},
+    "img_0005": {"weather_type": "rain",  "visibility": "low",    "illumination": "day", "road_condition": "wet"},
+    "img_0006": {"weather_type": "rain",  "visibility": "low",    "illumination": "day", "road_condition": "wet"},
+    "img_0014": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
+    "img_0015": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
+    "img_0016": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
 }
 
 TARGET_MODE = {
-    "img_0001": "no_weather",   # no token 결과 사용
-    "img_0006": "with_token",   # with token 결과 사용
-    "img_0014": "with_token",   # with token 결과 사용
+    "img_0001": "no_weather",   # snow  - no token
+    "img_0005": "with_token",   # rain  - scooter rider
+    "img_0006": "with_token",   # rain  - cyclist
+    "img_0014": "with_token",   # fog   - car
+    "img_0015": "with_token",   # fog   - car
+    "img_0016": "with_token",   # fog   - car
 }
 
 IMAGE_DIR = Path("/content/drive/MyDrive/icros_workspace/weather-conditioned-hazard-reasoning/data/images")
