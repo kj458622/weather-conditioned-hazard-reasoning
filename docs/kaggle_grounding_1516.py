@@ -164,3 +164,21 @@ for label, out_dir in [("3B", output_dir_3b), ("7B", output_dir_7b)]:
                       " | bbox:", data["bbox"])
                 if data.get("all_raws"):
                     print("Sample 1 raw:", data["all_raws"][0][:200])
+
+# ============================================================
+# Cell 7: 결과 zip 압축
+# ============================================================
+import zipfile, datetime
+
+timestamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+
+for label, out_dir in [("3B", output_dir_3b), ("7B", output_dir_7b)]:
+    zip_path = Path(f"/kaggle/working/grounding_1516_{label}_{timestamp}.zip")
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for img_id in TARGET:
+            img_dir = out_dir / img_id
+            if img_dir.exists():
+                for f in img_dir.rglob("*"):
+                    if f.is_file():
+                        zf.write(f, f.relative_to(out_dir.parent))
+    print(f"Saved: {zip_path}  ({zip_path.stat().st_size/1e6:.1f} MB)")
