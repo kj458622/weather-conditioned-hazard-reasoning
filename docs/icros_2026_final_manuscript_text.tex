@@ -61,14 +61,16 @@ Autonomous Driving, Vision-Language Model, Hazard Reasoning, Adverse Weather, St
 
 자율주행 시스템의 안전성은 주변 객체를 인식하는 수준을 넘어, 현재 장면이 왜 위험한지 이해하고 설명할 수 있는 능력과 밀접하게 연결된다. 최근 Vision-Language Model(VLM)은 이미지와 언어를 함께 처리하며 장면 이해와 설명 생성에서 높은 성능을 보이고 있어 자율주행 hazard reasoning에 활발히 활용되고 있다~\cite{qwen2025}.
 
-대표적으로 INSIGHT~\cite{insight2026}는 Qwen2-VL을 기반으로 위험 영역의 위치와 위험 이유를 함께 설명하는 방향을 제시하였다. 그러나 INSIGHT를 포함한 기존 연구들은 날씨·시정·노면 상태와 같은 환경 조건이 hazard 판단 자체를 어떻게 변화시키는지 구조적으로 반영하지 않는다. 실제 도로에서는 동일한 보행자·자전거 장면이라도 안개, 비, 눈 조건에 따라 위험의 성격과 대응 여유가 근본적으로 달라진다.
+자율주행 분야에서는 안전 위협 요소를 탐지하고 설명하는 다양한 연구가 진행되어 왔다. INSIGHT~\cite{insight2026}는 Qwen2-VL을 기반으로 위험 영역의 위치와 위험 이유를 함께 설명하는 방향을 제시하였으며, 멀티태스크 학습을 통해 spatial grounding과 텍스트 설명을 동시에 생성한다. SADWA~\cite{sadwa2025}는 VLM에 날씨 인식 능력을 부여하려는 시도를 하였으나, hazard reasoning과의 직접적 연계는 다루지 않는다. 또한 ACDC~\cite{acdc2021}와 같은 악천후 데이터셋 연구는 열악한 환경에서의 perception 성능 저하 문제를 제기하였으나, 날씨가 위험 요소의 해석 자체를 어떻게 바꾸는지에 대한 설명은 충분하지 않다.
+
+이러한 기존 연구들은 공통적으로 날씨·시정·노면 상태와 같은 환경 조건이 hazard 판단 자체를 어떻게 변화시키는지 구조적으로 반영하지 않는다. 실제 도로에서는 동일한 보행자·자전거 장면이라도 안개, 비, 눈 조건에 따라 위험의 성격과 대응 여유가 근본적으로 달라진다.
 
 본 연구는 이러한 한계를 완화하기 위해, 단일 전방 카메라 이미지와 Structured Weather Context를 함께 VLM에 입력하는 weather-aware hazard reasoning 프레임워크를 제안한다. 본 프레임워크의 기여는 다음과 같다.
 
 \begin{itemize}
   \setlength{\itemsep}{0pt}
   \item 악천후 조건을 구조화된 컨텍스트로 VLM에 주입하는 Structured Weather Context Injection 방식 제안
-  \item Fine-tuning 없이 pretrained VLM을 활용하는 실용적 추론 파이프라인 구현
+  \item Hazard object의 bounding box 탐지와 날씨 원인 기반 explanation을 동시에 생성하는 구조화된 출력 스키마 설계
   \item ACDC 데이터셋 기반 정성 실험을 통해 weather context가 hazard 탐지 및 위험 원인 설명을 실질적으로 변화시킴을 검증
 \end{itemize}
 
