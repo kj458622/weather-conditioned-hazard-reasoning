@@ -1,39 +1,29 @@
 """
 Multi-sample grounding experiment for selected images.
-각 이미지를 N번 샘플링해서 가장 좋은 bbox 결과를 고른다.
+각 이미지를 no_weather / with_token 두 버전 모두 N번 샘플링하여 best bbox를 고른다.
 """
 
 from __future__ import annotations
-import json, re, argparse
+import json, re
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Dict, Any, List
 
 WEATHER_TOKENS = {
-    "img_0001": {"weather_type": "snow",  "visibility": "low",    "illumination": "day", "road_condition": "slippery"},
-    "img_0005": {"weather_type": "rain",  "visibility": "low",    "illumination": "day", "road_condition": "wet"},
-    "img_0006": {"weather_type": "rain",  "visibility": "low",    "illumination": "day", "road_condition": "wet"},
-    "img_0014": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
-    "img_0015": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
-    "img_0016": {"weather_type": "fog",   "visibility": "low",    "illumination": "day", "road_condition": "clear"},
+    "img_0001": {"weather_type": "snow", "visibility": "low",  "illumination": "day", "road_condition": "slippery"},
+    "img_0005": {"weather_type": "rain", "visibility": "low",  "illumination": "day", "road_condition": "wet"},
+    "img_0006": {"weather_type": "rain", "visibility": "low",  "illumination": "day", "road_condition": "wet"},
+    "img_0014": {"weather_type": "fog",  "visibility": "low",  "illumination": "day", "road_condition": "clear"},
+    "img_0015": {"weather_type": "fog",  "visibility": "low",  "illumination": "day", "road_condition": "clear"},
+    "img_0016": {"weather_type": "fog",  "visibility": "low",  "illumination": "day", "road_condition": "clear"},
 }
 
-TARGET_MODE = {
-    "img_0001": "no_weather",   # snow  - no token
-    "img_0005": "with_token",   # rain  - scooter rider
-    "img_0006": "with_token",   # rain  - cyclist
-    "img_0014": "with_token",   # fog   - car
-    "img_0015": "with_token",   # fog   - car
-    "img_0016": "with_token",   # fog   - car
-}
-
-IMAGE_DIR = Path("/content/drive/MyDrive/icros_workspace/weather-conditioned-hazard-reasoning/data/images")
+IMAGE_DIR  = Path("/content/drive/MyDrive/icros_workspace/weather-conditioned-hazard-reasoning/data/images")
 OUTPUT_DIR = Path("/content/drive/MyDrive/icros_workspace/outputs/grounding_sample")
-N_SAMPLES = 5
+N_SAMPLES  = 5
 
 
 def load_font(size=20):
     from PIL import ImageFont
-    from pathlib import Path
     candidates = [
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -135,6 +125,59 @@ def draw_result(img_pil, result, out_path, condition, badge_color):
     img.save(out_path, dpi=(300,300))
 
 
+def run_mode(model, processor, img, img_id, weather, use_weather: bool, out_dir: Path):
+    """no_weather 또는 with_token 한 버전 실행 → out_dir 에 저장."""
+    if use_weather:
+        user_text = (
+            f"Weather: {weather['weather_type']}, visibility: {weather['visibility']}, road: {weather['road_condition']}.\n"
+            "Identify the single most dangerous object for the ego vehicle given the weather condition.\n"
+            "Reply ONLY in this format:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high or medium or low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
+            "EXPLANATION: <why this object is dangerous AND how the weather makes it more dangerous>"
+        )
+        badge_color = (50, 140, 60)
+        condition   = f"With Weather Token  ({weather['weather_type']} · {weather['road_condition']})"
+        tag         = "with_token"
+    else:
+        user_text = (
+            "Identify the single most dangerous object for the ego vehicle in this driving scene.\n"
+            "Reply ONLY in this format:\n"
+            "HAZARD: <object name>\n"
+            "RISK: <high or medium or low>\n"
+            "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
+            "EXPLANATION: <why this object is dangerous in this scene>"
+        )
+        badge_color = (80, 80, 170)
+        condition   = "Without Weather Token"
+        tag         = "no_weather"
+
+    mode_dir = out_dir / tag
+    mode_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"  [{tag}] sampling {N_SAMPLES}x ...")
+    results: List[Dict] = []
+    for i in range(N_SAMPLES):
+        r = run_once(model, processor, "cuda", img, user_text, temperature=0.7)
+        bbox_ok = r["bbox"] is not None
+        print(f"    sample {i+1}: bbox={r['bbox']}  hazard={r['hazard_object']}  {'✓' if bbox_ok else '✗'}")
+        r["sample_idx"] = i
+        results.append(r)
+        draw_result(img, r, mode_dir / f"sample_{i+1}.png", condition, badge_color)
+
+    valid = [r for r in results if r["bbox"] is not None]
+    best  = max(valid, key=lambda r: (r["bbox"][2]-r["bbox"][0])*(r["bbox"][3]-r["bbox"][1])) if valid else results[0]
+
+    draw_result(img, best, mode_dir / "best.png", condition, badge_color)
+    json.dump(
+        {"best": {k: v for k, v in best.items() if k != "raw"},
+         "all_raws": [r["raw"] for r in results]},
+        open(mode_dir / "results.json", "w"), indent=2, ensure_ascii=False
+    )
+    print(f"    Best: bbox={best['bbox']}  hazard={best['hazard_object']}")
+
+
 def main():
     import torch
     from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
@@ -153,10 +196,6 @@ def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     for img_id, weather in WEATHER_TOKENS.items():
-        mode = TARGET_MODE[img_id]
-        no_weather = (mode == "no_weather")
-
-        # find image file
         matches = list(IMAGE_DIR.glob(f"{img_id}_*.png"))
         if not matches:
             print(f"[{img_id}] image not found, skip.")
@@ -169,55 +208,11 @@ def main():
             ratio = MAX_SIZE / max(img.size)
             img = img.resize((int(img.width*ratio), int(img.height*ratio)))
 
-        if no_weather:
-            user_text = (
-                "Identify the single most dangerous object for the ego vehicle in this driving scene.\n"
-                "Reply ONLY in this format:\n"
-                "HAZARD: <object name>\n"
-                "RISK: <high or medium or low>\n"
-                "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
-                "EXPLANATION: <why this object is dangerous in this scene>"
-            )
-            badge_color = (80, 80, 170)
-            condition = "Without Weather Token"
-        else:
-            user_text = (
-                f"Weather: {weather['weather_type']}, visibility: {weather['visibility']}, road: {weather['road_condition']}.\n"
-                "Identify the single most dangerous object for the ego vehicle given the weather condition.\n"
-                "Reply ONLY in this format:\n"
-                "HAZARD: <object name>\n"
-                "RISK: <high or medium or low>\n"
-                "BOX: <x1>,<y1>,<x2>,<y2> in pixel coordinates\n"
-                "EXPLANATION: <why this object is dangerous AND how the weather makes it more dangerous>"
-            )
-            badge_color = (50, 140, 60)
-            condition = f"With Weather Token  ({weather['weather_type']} · {weather['road_condition']})"
+        out_dir = OUTPUT_DIR / img_id
+        print(f"\n[{img_id}] {weather['weather_type']} — running both modes")
 
-        sample_dir = OUTPUT_DIR / img_id
-        sample_dir.mkdir(exist_ok=True)
-
-        print(f"\n[{img_id}] {weather['weather_type']} | mode={mode} | {N_SAMPLES} samples...")
-        results = []
-        for i in range(N_SAMPLES):
-            r = run_once(model, processor, "cuda", img, user_text, temperature=0.7)
-            bbox_ok = r["bbox"] is not None
-            print(f"  sample {i+1}: bbox={r['bbox']}  hazard={r['hazard_object']}  {'✓' if bbox_ok else '✗'}")
-            r["sample_idx"] = i
-            results.append(r)
-            draw_result(img, r, sample_dir / f"sample_{i+1}.png", condition, badge_color)
-
-        # bbox 있는 것 중 best 선택 (bbox 크기 가장 적당한 것)
-        valid = [r for r in results if r["bbox"] is not None]
-        if valid:
-            best = max(valid, key=lambda r: (r["bbox"][2]-r["bbox"][0])*(r["bbox"][3]-r["bbox"][1]))
-        else:
-            best = results[0]
-
-        draw_result(img, best, sample_dir / "best.png", condition, badge_color)
-        json.dump({"best": {k:v for k,v in best.items() if k!="raw"},
-                   "all_raws": [r["raw"] for r in results]},
-                  open(sample_dir / "results.json", "w"), indent=2, ensure_ascii=False)
-        print(f"  Best: bbox={best['bbox']}  hazard={best['hazard_object']}")
+        run_mode(model, processor, img, img_id, weather, use_weather=False, out_dir=out_dir)
+        run_mode(model, processor, img, img_id, weather, use_weather=True,  out_dir=out_dir)
 
     print("\nDone.")
 
