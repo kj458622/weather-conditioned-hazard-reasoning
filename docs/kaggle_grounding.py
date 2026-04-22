@@ -25,7 +25,7 @@ print("Setup done.")
 import torch
 from transformers import AutoModelForImageTextToText, AutoProcessor, BitsAndBytesConfig
 
-MODEL_NAME = "Qwen/Qwen2.5-VL-3B-Instruct"
+MODEL_NAME = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16)
 processor = AutoProcessor.from_pretrained(MODEL_NAME, trust_remote_code=True)
@@ -65,7 +65,7 @@ from pathlib import Path
 import json
 
 image_dir  = Path("/kaggle/working/new_research/data/images")
-output_dir = Path("/kaggle/working/outputs/grounding_v7")
+output_dir = Path("/kaggle/working/outputs/grounding_v7_7B")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 for img_id in TARGET_IDS:
