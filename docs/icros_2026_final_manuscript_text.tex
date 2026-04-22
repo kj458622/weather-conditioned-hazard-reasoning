@@ -17,78 +17,149 @@
   bottom=20mm
 }
 
-\setstretch{1.15}
+\setstretch{1.08}
 \setlength{\columnsep}{8mm}
 \pagestyle{empty}
+\emergencystretch=2em
 
-\titleformat{\section}{\normalsize\bfseries}{\thesection.}{0.5em}{}
-\titleformat{\subsection}{\normalsize\itshape}{\thesubsection}{0.5em}{}
+\titleformat{\section}{\fontsize{11pt}{13pt}\selectfont\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\fontsize{10pt}{12pt}\selectfont\itshape}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.0ex plus 0.2ex minus 0.1ex}{0.5ex}
+\titlespacing*{\subsection}{0pt}{0.8ex plus 0.2ex minus 0.1ex}{0.4ex}
 
-\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\titlekr}[1]{{\fontsize{14pt}{16pt}\selectfont\bfseries #1\par}}
+\newcommand{\titleen}[1]{{\fontsize{14pt}{16pt}\selectfont #1\par}}
+\newcommand{\authorblock}[1]{{\fontsize{11pt}{13pt}\selectfont #1\par}}
+\newcommand{\abstractfont}{\fontsize{11pt}{13pt}\selectfont}
 
 \begin{document}
 \twocolumn[
 \begin{center}
-{\LARGE 악천후 조건을 반영한 자율주행 Hazard Reasoning 프로토타입 \par}
+\titlekr{악천후 조건 인식 기반 자율주행 위험 요소 탐지 및 추론 프레임워크}
 \vspace{2mm}
-{\large Weather-Conditioned Hazard Reasoning Prototype for Autonomous Driving \par}
+\titleen{A Framework for Adverse Weather-Aware Hazard Detection and Reasoning in Autonomous Driving}
 \vspace{4mm}
-{\normalsize ○홍길동$^{1}$, 김철수$^{1}$, 이영희$^{1*}$ \par}
+\authorblock{○양성렬$^{1}$, 지도교수$^{1*}$}
 \vspace{2mm}
-{\normalsize $^{1}$소속기관명 (TEL: 000-0000-0000, E-mail: your\_email@example.com) \par}
+\authorblock{$^{1}$소속기관명 (TEL: 000-0000-0000, E-mail: kj458622@gmail.com)}
 \end{center}
 
 \vspace{4mm}
-\noindent\textbf{Abstract} This paper presents a weather-conditioned hazard reasoning prototype for autonomous driving using a vision-language model. While existing hazard reasoning approaches mainly focus on identifying what is dangerous in a driving scene, they often do not explicitly explain how adverse weather changes the reason for risk. In real-world driving, however, fog, rain, snow, and nighttime conditions directly affect visibility, response time, and stopping margin, thereby altering the interpretation of scene risk. To address this issue, we propose a camera-only prototype that takes a single front-view image and a structured weather token as input and generates a structured hazard explanation. The weather token contains weather type, visibility, illumination, and road condition. Based on the image and token, the model outputs hazard object, risk level, reason, and a Korean explanation in structured JSON form. Qwen2.5-VL-3B-Instruct is used as the base model, and manual weather tokens are used in the current stage to ensure stable end-to-end inference. The prototype also includes simple result saving, visualization, and lightweight evaluation. The main goal of this work is not to claim full autonomous driving reasoning capability, but to provide a practical proof-of-concept showing that hazard explanations can change according to adverse weather conditions.
+{\abstractfont
+\noindent\textbf{Abstract}\enspace
+Safety in autonomous driving requires not only object detection but also an understanding of why a scene is hazardous under current environmental conditions. Existing VLM-based hazard reasoning approaches focus on scene-level object identification but do not explicitly model how adverse weather conditions alter the nature and severity of risk. We propose a weather-aware hazard reasoning framework that injects a Structured Weather Context — comprising weather type, visibility, illumination, and road condition — alongside a front-view camera image into a pretrained VLM. Without task-specific fine-tuning, the framework produces structured outputs including hazard object, bounding box, risk level, and weather-causal explanation. Using Qwen2.5-VL-3B-Instruct on ACDC adverse-weather scenes, we qualitatively demonstrate that structured weather context injection shifts model outputs from scene-only description toward weather-grounded causal reasoning.\par}
 
 \vspace{2mm}
-\noindent\textbf{Keywords} Autonomous Driving, Vision-Language Model, Hazard Reasoning, Adverse Weather, Structured Explanation
-\vspace{6mm}
+{\abstractfont
+\noindent\textbf{Keywords}\enspace
+Autonomous Driving, Vision-Language Model, Hazard Reasoning, Adverse Weather, Structured Context Injection\par}
+\vspace{4mm}
 ]
 
+%% ────────────────────────────────────────────────
 \section{서론}
-자율주행 시스템의 안전성은 주변 객체를 인식하는 수준을 넘어, 현재 장면이 왜 위험한지 이해하고 설명할 수 있는 능력과 밀접하게 연결된다. 최근 Vision-Language Model(VLM)은 이미지와 언어를 함께 처리하며 장면 이해와 설명 생성에서 높은 성능을 보이고 있어 자율주행 장면 reasoning에도 활용 가능성이 크다. 그러나 기존 hazard reasoning 연구는 대체로 위험 객체 또는 위험 위치를 설명하는 데 초점을 맞추며, 환경 조건에 따라 위험 설명이 어떻게 달라지는지에 대한 관점은 상대적으로 제한적이다.
 
-실제 도로에서는 같은 장면이라도 날씨와 조명 조건에 따라 위험의 의미가 달라진다. 예를 들어 보행자가 횡단보도 근처에 있는 장면은 맑은 낮보다 야간이나 눈 오는 환경에서 더 늦게 인지될 수 있으며, 전방 차량은 안개나 비 환경에서 더 큰 안전거리를 요구한다. 따라서 자율주행 hazard reasoning은 단순히 ``무엇이 위험한가''를 넘어서 ``환경 조건 때문에 왜 더 위험한가''를 설명할 필요가 있다.
+자율주행 시스템의 안전성은 주변 객체를 인식하는 수준을 넘어, 현재 장면이 왜 위험한지 이해하고 설명할 수 있는 능력과 밀접하게 연결된다. 최근 Vision-Language Model(VLM)은 이미지와 언어를 함께 처리하며 장면 이해와 설명 생성에서 높은 성능을 보이고 있어 자율주행 hazard reasoning에 활발히 활용되고 있다~\cite{qwen2025}.
 
-본 연구에서는 ICROS 포스터 발표용 1차 프로토타입으로서, 단일 전방 카메라 이미지와 weather token을 함께 사용하는 weather-conditioned hazard reasoning 파이프라인을 제안한다. 본 시스템은 이미지와 악천후 정보를 입력받아 위험 객체, 위험도, 위험 이유, 한국어 설명문을 구조화된 형태로 생성한다. 본 연구의 기여는 다음과 같다. 첫째, camera-only setting에서 weather-conditioned hazard reasoning 문제를 정의한다. 둘째, image와 structured weather token을 함께 사용하는 최소 기능 VLM 파이프라인을 제안한다. 셋째, 악천후 조건에 따라 설명이 달라질 수 있음을 보여주는 정성 시연 중심의 프로토타입을 구현한다.
+대표적으로 INSIGHT~\cite{insight2026}는 Qwen2-VL을 기반으로 위험 영역의 위치와 위험 이유를 함께 설명하는 방향을 제시하였다. 그러나 INSIGHT를 포함한 기존 연구들은 날씨·시정·노면 상태와 같은 환경 조건이 hazard 판단 자체를 어떻게 변화시키는지 구조적으로 반영하지 않는다. 실제 도로에서는 동일한 보행자·자전거 장면이라도 안개, 비, 눈 조건에 따라 위험의 성격과 대응 여유가 근본적으로 달라진다.
 
+본 연구는 이러한 한계를 완화하기 위해, 단일 전방 카메라 이미지와 Structured Weather Context를 함께 VLM에 입력하는 weather-aware hazard reasoning 프레임워크를 제안한다. 본 프레임워크의 기여는 다음과 같다.
+
+\begin{itemize}
+  \setlength{\itemsep}{0pt}
+  \item 악천후 조건을 구조화된 컨텍스트로 VLM에 주입하는 Structured Weather Context Injection 방식 제안
+  \item Fine-tuning 없이 pretrained VLM을 활용하는 실용적 추론 파이프라인 구현
+  \item ACDC 데이터셋 기반 정성 실험을 통해 weather context가 hazard 탐지 및 위험 원인 설명을 실질적으로 변화시킴을 검증
+\end{itemize}
+
+%% ────────────────────────────────────────────────
 \section{제안 방법}
-제안 시스템은 입력 데이터 처리, weather preprocessing, hazard reasoning의 세 단계로 구성된다. 입력은 단일 전방 카메라 이미지이며, weather preprocessing 단계에서는 이미지에 대응하는 날씨 조건을 구조화된 token으로 표현한다. Token은 \code{weather\_type}, \code{visibility}, \code{illumination}, \code{road\_condition}의 네 필드로 이루어진다. 예를 들어 안개 환경은 \code{fog-low-day-clear}, 비 오는 야간 환경은 \code{rain-medium-night-slippery}로 표현한다. 현재 단계에서는 manual mode를 우선 적용하여 전체 파이프라인의 안정성을 확보하였고, 추후 prompt-based weather estimation 또는 end-to-end weather-aware 모델로 확장 가능하도록 모듈을 분리하였다.
 
-본 연구의 weather-conditioned hazard reasoning 문제는 다음과 같이 정의할 수 있다.
+\subsection{문제 정의}
+
+본 연구는 단일 전방 이미지 $I$와 structured weather context $w$를 함께 사용하여 hazard reasoning 출력 $y$를 생성하는 문제를 다룬다.
+%
 \begin{equation}
-y = f_{\theta}(I, w)
+  y = f_{\theta}(I,\, w)
 \end{equation}
-여기서 $I$는 전방 카메라 이미지, $w$는 구조화된 weather token, $f_{\theta}$는 Qwen2.5-VL 기반 reasoning 모델, $y$는 최종 hazard reasoning 출력이다. 본 연구에서는 weather token과 출력을 각각 다음과 같이 정의한다.
+%
+weather context는 네 필드로 구성된다.
+%
 \begin{equation}
-w = \{w_{\text{type}}, v, l, r\}, \quad
-y = \{o, s, c, e\}
+  w = \{w_{\text{type}},\ v,\ l,\ r\}
 \end{equation}
-여기서 $w_{\text{type}}$, $v$, $l$, $r$는 각각 weather type, visibility, illumination, road condition을 의미하며, $o$, $s$, $c$, $e$는 hazard object, risk level, reason, explanation에 대응한다. 이 정의는 weather 정보를 별도의 구조화 입력으로 유지하면서, 추론 결과 또한 후처리와 평가가 쉬운 structured form으로 유지하기 위한 것이다.
+%
+여기서 $w_{\text{type}}$, $v$, $l$, $r$은 각각 weather type, visibility, illumination, road condition이다. 출력은 다음과 같이 정의한다.
+%
+\begin{equation}
+  y = \{o,\ b,\ s,\ e\}
+\end{equation}
+%
+여기서 $o$, $b$, $s$, $e$는 각각 hazard object, bounding box, risk level, weather-causal explanation이다.
 
-Hazard reasoning 단계에서는 이미지와 weather token을 함께 Qwen2.5-VL-3B-Instruct에 입력한다. 프롬프트는 단순한 장면 설명이 아니라, 주어진 날씨 조건 하에서 장면이 왜 위험한지 설명하도록 구성된다. 출력은 structured JSON을 우선으로 하며, \texttt{hazard\_object}, \texttt{risk\_level}, \texttt{reason}, \texttt{explanation} 네 필드를 포함한다. 예를 들어 보행자 장면에서는 ``보행자가 차로 근처에 있으며 안개로 인해 가시성이 낮아 조기 대응이 어려워 충돌 위험이 높음''과 같은 설명이 생성될 수 있다.
+\subsection{Structured Weather Context Injection}
 
-현재 단계는 단일 이미지 입력을 사용하므로 시간 축 정보가 필요한 행동 판정을 확정적으로 수행하는 것은 어렵다. 따라서 ``감속 중'', ``진입 중''과 같은 표현은 직접적인 사실 판정보다 가능성 기반 또는 주의 기반 표현으로 다루는 것이 적절하다. 이에 따라 본 연구의 출력은 행동 인식 시스템이 아니라, 장면과 환경 조건을 함께 고려한 risk-aware explanation 생성에 초점을 둔다.
+제안 프레임워크의 핵심은 weather context를 구조화된 텍스트로 VLM 프롬프트에 주입하는 것이다. 이미지만으로도 VLM은 장면 내 객체를 인식할 수 있으나, 날씨 조건이 해당 객체의 위험도를 어떻게 가중시키는지에 대한 인과적 설명은 weather context 없이는 생성되지 않는다. 프롬프트는 날씨 조건 prefix와 구조화된 출력 포맷 지시로 구성되며, 모델이 hazard object 식별, bounding box 예측, 날씨 원인 기반 explanation을 순차적으로 생성하도록 유도한다.
 
-\section{구현 및 실험 구성}
-프로토타입은 Python 기반으로 구현되었으며, 추론 모듈(\code{run\_inference.py}), weather preprocessing 모듈(\code{weather\_preprocess.py}), 프롬프트 모듈(\code{prompting.py}), 평가 모듈(\code{evaluate.py}) 등으로 분리하였다. 이 구조는 현재의 manual weather token 기반 프로토타입뿐 아니라, 향후 weather-aware fine-tuning이나 멀티센서 확장에도 대응할 수 있도록 설계하였다. 또한 모델 로딩 실패 또는 GPU 미사용 환경에서도 개발을 지속할 수 있도록 CPU fallback과 heuristic fallback 경로를 포함하였다.
+\subsection{구현}
 
-초기 실험용 데이터셋은 10--30장 규모의 소규모 세트를 목표로 한다. 이미지 유형은 보행자 장면, 전방 차량 장면, 차선/곡선/교차로 장면으로 나누고, weather condition은 fog, rain, snow, night를 우선 포함한다. 각 샘플에는 weather token과 함께 \code{hazard\_object}, \code{risk\_level}, \code{reason}, \code{explanation\_ko}를 수동 annotation한다. 본 단계에서는 localization annotation이나 bounding box는 필수로 사용하지 않으며, weather-conditioned explanation annotation을 우선시한다.
+베이스 모델로 Qwen2.5-VL-3B-Instruct~\cite{qwen2025}를 사용하며, 4-bit quantization을 적용하여 제한된 GPU 환경(T4 15GB)에서 추론을 수행한다. Task-specific fine-tuning은 수행하지 않으며, structured prompt conditioning만으로 weather-aware reasoning을 유도한다. 데이터셋은 ACDC~\cite{acdc2021} adverse-weather 이미지 중 snow, rain, fog 조건의 14장을 사용하였다.
 
-평가는 복잡한 대규모 벤치마크 대신 프로토타입에 적합한 경량 지표로 구성한다. 첫째, structured JSON parsing success rate를 측정하여 출력 안정성을 평가한다. 둘째, target explanation과 generated explanation 사이의 ROUGE-L을 계산하여 설명 유사도를 본다. 셋째, hazard object와 risk level field accuracy를 함께 기록한다. 그러나 ICROS 단계에서 가장 중요한 것은 동일하거나 유사한 장면에서 weather condition을 다르게 주었을 때 생성 설명이 의미 있게 달라지는지를 보여주는 정성 사례이다.
+그림~\ref{fig:pipeline}에 전체 파이프라인을 나타낸다.
 
-\section{논의 및 결론}
-본 연구는 완성형 자율주행 reasoning 시스템이 아니라, weather-conditioned hazard explanation이라는 문제를 직관적으로 보여주기 위한 ICROS용 proof-of-concept이다. 제안 방식은 단일 이미지와 structured weather token만으로도 환경 조건을 반영한 위험 설명을 생성할 수 있다는 가능성을 보여준다. 또한 structured JSON 출력 방식을 사용함으로써 후처리, 평가, 시각화, 포스터 구성 측면에서 실용성을 확보하였다.
+\begin{figure}[h]
+  \centering
+  % \includegraphics[width=\columnwidth]{figure_pipeline.png}
+  \fbox{\rule{0pt}{2.5cm}\rule{\columnwidth}{0pt}}
+  \caption{제안 프레임워크의 파이프라인. 전방 카메라 이미지와 Structured Weather Context를 Qwen2.5-VL-3B에 입력하여 hazard object, bounding box, risk level, weather-causal explanation을 출력한다.}
+  \label{fig:pipeline}
+\end{figure}
 
-한편 한계도 분명하다. 첫째, 단일 이미지 기반이므로 시간 축이 필요한 행동 판정에는 제약이 있다. 둘째, weather token이 수동 또는 프롬프트 기반으로 주어지므로 완전한 end-to-end 모델은 아니다. 셋째, 데이터셋 규모가 작아 일반화 성능을 논하기 어렵다. 그럼에도 불구하고 본 프로토타입은 ``악천후가 reasoning을 어떻게 바꾸는가''를 직접 시연할 수 있는 최소 기능 시스템으로서 의미가 있다.
+%% ────────────────────────────────────────────────
+\section{실험 결과}
 
-향후에는 첫째, weather token 자동 추론을 포함하는 end-to-end weather-aware VLM으로 확장하고, 둘째, LoRA 기반 supervised fine-tuning을 적용하며, 셋째, region grounding 또는 멀티센서 입력을 포함하는 보다 정교한 autonomous driving reasoning 프레임워크로 발전시키고자 한다.
+\subsection{정성적 결과}
 
-\begin{thebibliography}{99}
-\bibitem{acdc} C. Sakaridis, D. Dai, and L. Van Gool, ``ACDC: The Adverse Conditions Dataset with Correspondences for Semantic Driving Scene Understanding,'' in \textit{Proc. ICCV}, 2021.
-\bibitem{insight} D. Chen, Z. Zhang, L. Cheng, Y. Liu, and X. T. Yang, ``INSIGHT: Enhancing Autonomous Driving Safety through Vision-Language Models on Context-Aware Hazard Detection and Reasoning,'' arXiv preprint arXiv:2502.00262, 2026.
-\bibitem{qwen} Qwen Team, ``Qwen2.5-VL Technical Report and Model Release,'' 2025.
+그림~\ref{fig:qualitative}은 snow, rain, fog 조건에서의 대표적인 hazard reasoning 결과를 보여준다. 각 결과는 위험 객체의 bounding box와 함께 날씨 조건이 위험도를 어떻게 가중시키는지에 대한 설명을 포함한다.
+
+\begin{figure}[h]
+  \centering
+  % \includegraphics[width=\columnwidth]{figure_qualitative.png}
+  \fbox{\rule{0pt}{5.0cm}\rule{\columnwidth}{0pt}}
+  \caption{악천후 조건별 Hazard Reasoning 정성적 결과. (좌상) Snow: 보행자, 눈길 미끄러움으로 인한 반응 지연. (우상) Rain: 자전거, 빗길 마찰 감소 및 가시성 저하. (좌하) Fog: 자전거/보행자, 안개로 인한 객체 식별 어려움. (우하) Snow: 자전거, 눈 덮인 노면의 불안정성.}
+  \label{fig:qualitative}
+\end{figure}
+
+\subsection{분석}
+
+Weather context를 주입하지 않으면 모델은 장면 내 객체의 위치와 일반적 위험성만을 설명한다. 반면 weather context를 주입하면, 동일 장면에서 ``빗길로 인한 제동거리 증가'', ``안개로 인한 가시성 저하'', ``눈길의 미끄러움으로 인한 예측 불가능한 움직임'' 등 날씨가 위험을 가중시키는 인과적 설명이 생성된다. 이는 기존 scene-only reasoning이 제공하지 못하는 weather-conditioned causal explanation의 가능성을 보여준다.
+
+%% ────────────────────────────────────────────────
+\section{결론}
+
+본 연구는 악천후 조건이 자율주행 hazard reasoning에 미치는 영향을 분석하고, Structured Weather Context Injection 기반의 weather-aware hazard reasoning 프레임워크를 제안하였다. Fine-tuning 없이 pretrained VLM에 구조화된 날씨 컨텍스트를 주입함으로써, 위험 객체의 bounding box 탐지와 함께 날씨 원인 기반의 hazard explanation 생성이 가능함을 정성적으로 검증하였다. 향후 연구로는 이미지 기반 자동 weather estimation, LoRA fine-tuning을 통한 출력 안정성 향상, INSIGHT의 spatial grounding과의 통합을 통해 보다 완성도 높은 시스템으로 발전시키고자 한다.
+
+%% ────────────────────────────────────────────────
+\begin{thebibliography}{9}
+
+\bibitem{qwen2025}
+Qwen Team, ``Qwen2.5-VL Technical Report,'' 2025.
+
+\bibitem{insight2026}
+D. Chen, Z. Zhang, L. Cheng, Y. Liu, and X. T. Yang,
+``INSIGHT: Enhancing Autonomous Driving Safety through Vision-Language Models on Context-Aware Hazard Detection and Reasoning,''
+\textit{arXiv}:2502.00262, 2026.
+
+\bibitem{acdc2021}
+C. Sakaridis, D. Dai, and L. Van Gool,
+``ACDC: The Adverse Conditions Dataset with Correspondences for Semantic Driving Scene Understanding,''
+\textit{Proc. ICCV}, 2021.
+
+\bibitem{sadwa2025}
+J. Kim et al.,
+``SADWA: Fine-Grained Weather Awareness with Vision-Language Models for Seamless Autonomous Driving,''
+\textit{ICCVW}, 2025.
+
 \end{thebibliography}
 
 \end{document}
